@@ -64,9 +64,9 @@ A comprehensive guide explaining the backend architecture, services, database sc
    ```
 
 4. Access the services in your browser:
-   - Frontend Application: http://localhost:3000
-   - PHP Backend API: http://localhost:8080
-   - Flask AI Service: http://localhost:5000
+   - Frontend Application: npm run start:frontend http://localhost:3000 
+   - PHP Backend API: npm run start:backend http://localhost:8080 
+   - Flask AI Service: npm run start:ai http://localhost:5000
 
 ---
 
