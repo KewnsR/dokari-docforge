@@ -1323,113 +1323,144 @@ export default function App() {
             </div>
 
             {/* Project Details Card */}
-            {currentProject && (
-              <div className="project-details-card d-flex flex-column gap-3">
-                <div>
-                  <div className="d-flex justify-content-between align-items-start mb-1">
-                    <h6 className="project-detail-name m-0 text-truncate">{currentProject.name}</h6>
-                    <button onClick={deleteCurrentProject} className="btn-delete-project" title="Delete Project">
-                      <i className="fa-solid fa-trash-can"></i>
-                    </button>
+            <AnimatePresence>
+              {currentProject && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="project-details-card d-flex flex-column gap-3"
+                >
+                  <div>
+                    <div className="d-flex justify-content-between align-items-start mb-1">
+                      <h6 className="project-detail-name m-0 text-truncate">{currentProject.name}</h6>
+                      <button onClick={deleteCurrentProject} className="btn-delete-project" title="Delete Project">
+                        <i className="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
+                    <p className="project-detail-desc text-muted m-0">{currentProject.description}</p>
                   </div>
-                  <p className="project-detail-desc text-muted m-0">{currentProject.description}</p>
-                </div>
-                
-                <div className="project-stats text-muted">
-                  <div className="d-flex justify-content-between py-1 border-bottom">
-                    <span>Files uploaded:</span>
-                    <span className="fw-bold">{uploadedFiles.length}</span>
-                  </div>
-                  <div className="d-flex justify-content-between py-1">
-                    <span>Generated docs:</span>
-                    <span className="fw-bold">
-                      {((documents.api ? 1 : 0) + (documents.readme ? 1 : 0) + (diagramUrl ? 1 : 0))}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Doc Health Score Card */}
-            {currentProject && (
-              <div className="project-details-card d-flex flex-column gap-3">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="position-relative d-inline-flex">
-                    <svg className="health-ring-svg" width="60" height="60">
-                      <circle className="health-ring-bg" cx="30" cy="30" r="26" />
-                      <circle 
-                        className="health-ring-indicator" 
-                        cx="30" 
-                        cy="30" 
-                        r="26" 
-                        stroke={
-                          docHealthScore >= 80 ? 'var(--success)' : 
-                          docHealthScore >= 50 ? 'var(--warning)' : 
-                          'var(--error)'
-                        }
-                        strokeDasharray="163.3"
-                        strokeDashoffset={163.3 - (163.3 * docHealthScore) / 100}
-                      />
-                    </svg>
-                    <div className="position-absolute top-50 start-50 translate-middle fw-bold fs-7" style={{ transform: 'translate(-50%, -50%)', letterSpacing: '-0.02em' }}>
-                      {healthLoading ? (
-                        <span className="spinner-border spinner-border-sm text-primary" style={{ width: '12px', height: '12px', borderWidth: '2px' }} role="status"></span>
-                      ) : (
-                        `${docHealthScore}%`
-                      )}
+                  
+                  <div className="project-stats text-muted">
+                    <div className="d-flex justify-content-between py-1 border-bottom">
+                      <span>Files uploaded:</span>
+                      <span className="fw-bold">{uploadedFiles.length}</span>
+                    </div>
+                    <div className="d-flex justify-content-between py-1">
+                      <span>Generated docs:</span>
+                      <span className="fw-bold">
+                        {((documents.api ? 1 : 0) + (documents.readme ? 1 : 0) + (documents.architecture ? 1 : 0))}
+                      </span>
                     </div>
                   </div>
-                  <div>
-                    <h6 className="sidebar-title m-0">Documentation Health</h6>
-                    <span className="fs-7 text-muted fw-semibold">
-                      {docHealthScore >= 80 ? 'Excellent Coverage' : 
-                       docHealthScore >= 50 ? 'Needs Attention' : 
-                       'Critical Deficit'}
-                    </span>
-                  </div>
-                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                <div className="doc-suggestions-feed">
-                  {docHealthSuggestions.length === 0 ? (
-                    <p className="fs-7 text-muted m-0">No suggestions available.</p>
-                  ) : (
-                    docHealthSuggestions.map((suggestion, idx) => (
-                      <div key={idx} className="doc-suggestion-item border-bottom py-2.5 d-flex justify-content-between align-items-start gap-2">
-                        <span className="fs-7 text-secondary lh-sm">{suggestion}</span>
-                        {uploadedFiles.length > 0 && user && (
-                          <button 
-                            onClick={() => generateDocFix(suggestion)} 
-                            className="btn-fix-issue" 
-                            title="Generate Fix"
-                          >
-                            Fix
-                          </button>
+            {/* Doc Health Score Card */}
+            <AnimatePresence>
+              {currentProject && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="project-details-card d-flex flex-column gap-3"
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="position-relative d-inline-flex">
+                      <svg className="health-ring-svg" width="60" height="60">
+                        <circle className="health-ring-bg" cx="30" cy="30" r="26" />
+                        <circle 
+                          className="health-ring-indicator" 
+                          cx="30" 
+                          cy="30" 
+                          r="26" 
+                          stroke={
+                            docHealthScore >= 80 ? 'var(--success)' : 
+                            docHealthScore >= 50 ? 'var(--warning)' : 
+                            'var(--error)'
+                          }
+                          strokeDasharray="163.3"
+                          strokeDashoffset={163.3 - (163.3 * docHealthScore) / 100}
+                        />
+                      </svg>
+                      <div className="position-absolute top-50 start-50 translate-middle fw-bold fs-7" style={{ transform: 'translate(-50%, -50%)', letterSpacing: '-0.02em' }}>
+                        {healthLoading ? (
+                          <span className="spinner-border spinner-border-sm text-primary" style={{ width: '12px', height: '12px', borderWidth: '2px' }} role="status"></span>
+                        ) : (
+                          `${docHealthScore}%`
                         )}
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+                    </div>
+                    <div>
+                      <h6 className="sidebar-title m-0">Documentation Health</h6>
+                      <span className="fs-7 text-muted fw-semibold">
+                        {docHealthScore >= 80 ? 'Excellent Coverage' : 
+                         docHealthScore >= 50 ? 'Needs Attention' : 
+                         'Critical Deficit'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="doc-suggestions-feed">
+                    {docHealthSuggestions.length === 0 ? (
+                      <p className="fs-7 text-muted m-0">No suggestions available.</p>
+                    ) : (
+                      docHealthSuggestions.map((suggestion, idx) => (
+                        <div key={idx} className="doc-suggestion-item border-bottom py-2.5 d-flex justify-content-between align-items-start gap-2">
+                          <span className="fs-7 text-secondary lh-sm">{suggestion}</span>
+                          {uploadedFiles.length > 0 && user && (
+                            <button 
+                              onClick={() => generateDocFix(suggestion)} 
+                              className="btn-fix-issue" 
+                              title="Generate Fix"
+                            >
+                              Fix
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </aside>
 
           {/* Main Content Area */}
           <main className="content-container flex-grow-1 p-4">
-            {!currentProjectId ? (
-              <div className="empty-state-card text-center d-flex flex-column align-items-center justify-content-center py-5">
-                <div className="empty-icon-container mb-3">
-                  <i className="fa-solid fa-folder-open text-muted"></i>
-                </div>
-                <h4>No Active Project Selected</h4>
-                <p className="text-muted max-w-sm mb-4">
-                  Please select an existing project from the sidebar dropdown or create a new project to start uploading source files and generating technical documentation.
-                </p>
-                <button onClick={handleCreateProjectBtnClick} className="btn btn-primary">
-                  <i className="fa-solid fa-plus me-2"></i>Create Project
-                </button>
-              </div>
-            ) : (
-              <div className="row g-4 h-100 align-items-stretch">
+            <AnimatePresence mode="wait">
+              {!currentProjectId ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="empty-state-card text-center d-flex flex-column align-items-center justify-content-center py-5"
+                >
+                  <div className="empty-icon-container mb-3">
+                    <i className="fa-solid fa-folder-open text-muted"></i>
+                  </div>
+                  <h4>No Active Project Selected</h4>
+                  <p className="text-muted max-w-sm mb-4">
+                    Please select an existing project from the sidebar dropdown or create a new project to start uploading source files and generating technical documentation.
+                  </p>
+                  <button onClick={handleCreateProjectBtnClick} className="btn btn-primary">
+                    <i className="fa-solid fa-plus me-2"></i>Create Project
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.3 }}
+                  className="row g-4 h-100 align-items-stretch w-100 m-0"
+                >
               {/* Left Column: File Manager */}
               <div className="col-12 col-xl-4 d-flex flex-column">
                 <div className="dashboard-card flex-grow-1 d-flex flex-column p-4 animate-delay-1">
@@ -1494,48 +1525,54 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="file-items-container">
-                        {uploadedFiles
-                          .filter(f => f.filename.toLowerCase().includes(fileSearchQuery.toLowerCase()))
-                          .map((file, idx) => {
-                            const ext = file.filename.split('.').pop();
-                            let iconClass = 'fa-file-lines';
-                            if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) iconClass = 'fa-js text-warning';
-                            if (ext === 'py') iconClass = 'fa-python text-info';
-                            if (ext === 'php') iconClass = 'fa-php text-primary';
+                        <AnimatePresence initial={false}>
+                          {uploadedFiles
+                            .filter(f => f.filename.toLowerCase().includes(fileSearchQuery.toLowerCase()))
+                            .map((file) => {
+                              const ext = file.filename.split('.').pop();
+                              let iconClass = 'fa-file-lines';
+                              if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) iconClass = 'fa-js text-warning';
+                              if (ext === 'py') iconClass = 'fa-python text-info';
+                              if (ext === 'php') iconClass = 'fa-php text-primary';
 
-                            return (
-                              <div 
-                                key={idx} 
-                                onClick={() => setSelectedFileInspector(file)}
-                                className="file-item-row d-flex align-items-center justify-content-between py-2 px-3 mb-2 border rounded"
-                                title="Click to inspect source code"
-                              >
-                                <div className="d-flex align-items-center text-truncate me-2">
-                                  <i className={`fa-solid ${iconClass} me-2.5`}></i>
-                                  <span className="file-item-name text-truncate fw-medium fs-7">{file.filename}</span>
-                                </div>
-                                <div className="d-flex align-items-center gap-2">
-                                  <span className="file-item-size text-muted fs-7">{Math.round((file.content ? file.content.length : 0) / 1024 * 10) / 10} KB</span>
-                                  <button 
-                                    type="button" 
-                                    onClick={() => setSelectedFileInspector(file)} 
-                                    className="btn btn-sm btn-outline-primary p-1 px-2 border-0"
-                                    title="Inspect Source Code"
-                                  >
-                                    <i className="fa-solid fa-eye fs-7"></i>
-                                  </button>
-                                  <button 
-                                    type="button" 
-                                    onClick={(e) => { e.stopPropagation(); deleteFile(file.filename); }} 
-                                    className="btn btn-sm btn-outline-danger p-1 px-2 border-0"
-                                    title="Delete File"
-                                  >
-                                    <i className="fa-solid fa-trash fs-7"></i>
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                              return (
+                                <motion.div 
+                                  key={file.filename}
+                                  initial={{ opacity: 0, x: -12 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  exit={{ opacity: 0, x: 12 }}
+                                  layout
+                                  onClick={() => setSelectedFileInspector(file)}
+                                  className="file-item-row d-flex align-items-center justify-content-between py-2 px-3 mb-2 border rounded"
+                                  title="Click to inspect source code"
+                                >
+                                  <div className="d-flex align-items-center text-truncate me-2">
+                                    <i className={`fa-solid ${iconClass} me-2.5`}></i>
+                                    <span className="file-item-name text-truncate fw-medium fs-7">{file.filename}</span>
+                                  </div>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <span className="file-item-size text-muted fs-7">{Math.round((file.content ? file.content.length : 0) / 1024 * 10) / 10} KB</span>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setSelectedFileInspector(file)} 
+                                      className="btn btn-sm btn-outline-primary p-1 px-2 border-0"
+                                      title="Inspect Source Code"
+                                    >
+                                      <i className="fa-solid fa-eye fs-7"></i>
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      onClick={(e) => { e.stopPropagation(); deleteFile(file.filename); }} 
+                                      className="btn btn-sm btn-outline-danger p-1 px-2 border-0"
+                                      title="Delete File"
+                                    >
+                                      <i className="fa-solid fa-trash fs-7"></i>
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
@@ -1604,52 +1641,69 @@ export default function App() {
 
                   {/* Main Document Output Area */}
                   <div className="document-output-wrapper flex-grow-1">
-                    {activeTab === 'architecture' ? (
-                      /* Diagram Panel */
-                      <div className="diagram-display-panel h-100 d-flex flex-column align-items-center justify-content-center border rounded p-3 bg-light-panel overflow-auto">
-                        {documents.architecture ? (
-                          documents.architecture.startsWith('IMAGE_URL:') ? (
-                            <div className="diagram-image-container text-center">
-                              <img src={documents.architecture.substring(10)} alt="Architecture Diagram" className="img-fluid rounded border shadow-sm" style={{ maxHeight: '420px', objectFit: 'contain' }} />
-                              <div className="mt-3">
-                                <a href={documents.architecture.substring(10)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary">
-                                  <i className="fa-solid fa-up-right-from-square me-2"></i>Open in New Tab
-                                </a>
+                    <AnimatePresence mode="wait">
+                      {activeTab === 'architecture' ? (
+                        /* Diagram Panel */
+                        <motion.div
+                          key="architecture"
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.22 }}
+                          className="diagram-display-panel h-100 d-flex flex-column align-items-center justify-content-center border rounded p-3 bg-light-panel overflow-auto"
+                        >
+                          {documents.architecture ? (
+                            documents.architecture.startsWith('IMAGE_URL:') ? (
+                              <div className="diagram-image-container text-center">
+                                <img src={documents.architecture.substring(10)} alt="Architecture Diagram" className="img-fluid rounded border shadow-sm" style={{ maxHeight: '420px', objectFit: 'contain' }} />
+                                <div className="mt-3">
+                                  <a href={documents.architecture.substring(10)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary">
+                                    <i className="fa-solid fa-up-right-from-square me-2"></i>Open in New Tab
+                                  </a>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <div id="mermaid-container" className="w-100 h-100 d-flex align-items-center justify-content-center"></div>
+                            )
                           ) : (
-                            <div id="mermaid-container" className="w-100 h-100 d-flex align-items-center justify-content-center"></div>
-                          )
-                        ) : (
-                          <div className="no-docs-placeholder text-center text-muted py-5">
-                            <i className="fa-solid fa-network-wired d-block fs-3 mb-2"></i>
-                            <span>No diagram generated yet. Click "AI Generate" to render structure.</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      /* Document Markdown Panel */
-                      <div className="markdown-render-panel h-100 border rounded p-4 overflow-auto bg-light-panel">
-                        {documents[activeTab] ? (
-                          <div 
-                            className="markdown-body" 
-                            dangerouslySetInnerHTML={{ __html: marked.parse(documents[activeTab]) }} 
-                          />
-                        ) : (
-                          <div className="no-docs-placeholder text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center h-100">
-                            <i className="fa-solid fa-pen-nib d-block fs-3 mb-2"></i>
-                            <span>No documentation generated yet.</span>
-                            <span className="text-muted fs-7 mt-1">Upload code files and click "AI Generate" to begin.</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                            <div className="no-docs-placeholder text-center text-muted py-5">
+                              <i className="fa-solid fa-network-wired d-block fs-3 mb-2"></i>
+                              <span>No diagram generated yet. Click "AI Generate" to render structure.</span>
+                            </div>
+                          )}
+                        </motion.div>
+                      ) : (
+                        /* Document Markdown Panel */
+                        <motion.div
+                          key={activeTab}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.22 }}
+                          className="markdown-render-panel h-100 border rounded p-4 overflow-auto bg-light-panel"
+                        >
+                          {documents[activeTab] ? (
+                            <div 
+                              className="markdown-body" 
+                              dangerouslySetInnerHTML={{ __html: marked.parse(documents[activeTab]) }} 
+                            />
+                          ) : (
+                            <div className="no-docs-placeholder text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center h-100">
+                              <i className="fa-solid fa-pen-nib d-block fs-3 mb-2"></i>
+                              <span>No documentation generated yet.</span>
+                              <span className="text-muted fs-7 mt-1">Upload code files and click "AI Generate" to begin.</span>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </main>
+        </AnimatePresence>
+      </main>
       </div>
       ) : (
         <SplashLandingPage 
@@ -1816,149 +1870,191 @@ export default function App() {
       </AnimatePresence>
 
       {/* Create Project Modal */}
-      {showNewProjectModal && (
-        <div className="modal-backdrop-custom d-flex align-items-center justify-content-center">
-          <div className="modal-card">
-            <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-              <h5 className="modal-title m-0">Create New Project</h5>
-              <button onClick={() => setShowNewProjectModal(false)} className="btn-modal-close">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-
-            <form onSubmit={createProject}>
-              <div className="form-group mb-3">
-                <label htmlFor="projectName" className="form-label-custom">Project Name</label>
-                <input 
-                  type="text" 
-                  id="projectName" 
-                  className="form-control-custom"
-                  value={newProjectName} 
-                  onChange={(e) => setNewProjectName(e.target.value)} 
-                  placeholder="e.g. Dokari Web App"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <div className="form-group mb-4">
-                <label htmlFor="projectDesc" className="form-label-custom">Description (Optional)</label>
-                <textarea 
-                  id="projectDesc" 
-                  className="form-control-custom"
-                  value={newProjectDesc} 
-                  onChange={(e) => setNewProjectDesc(e.target.value)} 
-                  placeholder="What is this project about?"
-                  rows="3"
-                />
-              </div>
-
-              <div className="modal-actions-custom d-flex justify-content-end gap-2">
-                <button type="button" onClick={() => setShowNewProjectModal(false)} className="btn btn-secondary">
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Create Project
+      <AnimatePresence>
+        {showNewProjectModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="modal-card"
+            >
+              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                <h5 className="modal-title m-0">Create New Project</h5>
+                <button onClick={() => setShowNewProjectModal(false)} className="btn-modal-close" type="button">
+                  <i className="fa-solid fa-xmark"></i>
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              <form onSubmit={createProject}>
+                <div className="form-group mb-3">
+                  <label htmlFor="projectName" className="form-label-custom">Project Name</label>
+                  <input 
+                    type="text" 
+                    id="projectName" 
+                    className="form-control-custom"
+                    value={newProjectName} 
+                    onChange={(e) => setNewProjectName(e.target.value)} 
+                    placeholder="e.g. Dokari Web App"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group mb-4">
+                  <label htmlFor="projectDesc" className="form-label-custom">Description (Optional)</label>
+                  <textarea 
+                    id="projectDesc" 
+                    className="form-control-custom"
+                    value={newProjectDesc} 
+                    onChange={(e) => setNewProjectDesc(e.target.value)} 
+                    placeholder="What is this project about?"
+                    rows="3"
+                  />
+                </div>
+
+                <div className="modal-actions-custom d-flex justify-content-end gap-2">
+                  <button type="button" onClick={() => setShowNewProjectModal(false)} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Create Project
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Code Documentation Fix Recommendation Modal */}
-      {showFixModal && (
-        <div className="modal-backdrop-custom d-flex align-items-center justify-content-center">
-          <div className="modal-card" style={{ maxWidth: '600px', width: '100%' }}>
-            <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-              <h5 className="modal-title m-0">Suggested Documentation Fix</h5>
-              <button onClick={() => setShowFixModal(false)} className="btn-modal-close">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-
-            <div className="modal-body-content">
-              <p className="fs-7 text-muted mb-2">Recommendation:</p>
-              <div className="p-2.5 bg-light rounded border mb-3">
-                <span className="fs-7 fw-semibold text-secondary">{selectedFixSuggestion}</span>
+      <AnimatePresence>
+        {showFixModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="modal-card" 
+              style={{ maxWidth: '600px', width: '100%' }}
+            >
+              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                <h5 className="modal-title m-0">Suggested Documentation Fix</h5>
+                <button onClick={() => setShowFixModal(false)} className="btn-modal-close" type="button">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
               </div>
 
-              <p className="fs-7 text-muted mb-2">AI-Generated Code/Comment Fix Proposal:</p>
-              <div className="position-relative">
-                {fixingLoading ? (
-                  <div className="border rounded p-4 text-center bg-light-panel">
-                    <span className="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
-                    <span className="fs-7 text-muted">Generating documentation fix...</span>
-                  </div>
-                ) : (
-                  <>
-                    <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '250px' }}>
-                      <code>{docFixProposal || 'No fix proposal generated.'}</code>
-                    </pre>
-                    {docFixProposal && (
-                      <button 
-                        onClick={copyDocFix} 
-                        className="btn btn-secondary btn-sm position-absolute" 
-                        style={{ top: '10px', right: '10px', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                      >
-                        Copy
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+              <div className="modal-body-content">
+                <p className="fs-7 text-muted mb-2">Recommendation:</p>
+                <div className="p-2.5 bg-light rounded border mb-3">
+                  <span className="fs-7 fw-semibold text-secondary">{selectedFixSuggestion}</span>
+                </div>
 
-            <div className="modal-actions-custom d-flex justify-content-end gap-2 mt-4 border-top pt-3">
-              <button type="button" onClick={() => setShowFixModal(false)} className="btn btn-secondary">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <p className="fs-7 text-muted mb-2">AI-Generated Code/Comment Fix Proposal:</p>
+                <div className="position-relative">
+                  {fixingLoading ? (
+                    <div className="border rounded p-4 text-center bg-light-panel">
+                      <span className="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
+                      <span className="fs-7 text-muted">Generating documentation fix...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '250px' }}>
+                        <code>{docFixProposal || 'No fix proposal generated.'}</code>
+                      </pre>
+                      {docFixProposal && (
+                        <button 
+                          onClick={copyDocFix} 
+                          className="btn btn-secondary btn-sm position-absolute" 
+                          style={{ top: '10px', right: '10px', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                        >
+                          Copy
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-actions-custom d-flex justify-content-end gap-2 mt-4 border-top pt-3">
+                <button type="button" onClick={() => setShowFixModal(false)} className="btn btn-secondary">
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* File Inspector Modal */}
-      {selectedFileInspector && (
-        <div className="modal-backdrop-custom d-flex align-items-center justify-content-center">
-          <div className="modal-card" style={{ maxWidth: '750px', width: '100%' }}>
-            <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-              <h5 className="modal-title m-0 d-flex align-items-center gap-2">
-                <i className="fa-solid fa-code text-primary"></i>
-                <span>File Inspector — {selectedFileInspector.filename}</span>
-              </h5>
-              <button onClick={() => setSelectedFileInspector(null)} className="btn-modal-close">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-
-            <div className="modal-body-content">
-              <div className="d-flex gap-3 mb-3 fs-7 text-muted border-bottom pb-2">
-                <div><strong>Size:</strong> {Math.round((selectedFileInspector.content ? selectedFileInspector.content.length : 0) / 1024 * 10) / 10} KB</div>
-                <div><strong>Lines:</strong> {selectedFileInspector.content ? selectedFileInspector.content.split('\n').length : 0}</div>
-                <div><strong>Extension:</strong> .{selectedFileInspector.filename.split('.').pop()}</div>
+      <AnimatePresence>
+        {selectedFileInspector && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="modal-card" 
+              style={{ maxWidth: '750px', width: '100%' }}
+            >
+              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                <h5 className="modal-title m-0 d-flex align-items-center gap-2">
+                  <i className="fa-solid fa-code text-primary"></i>
+                  <span>File Inspector — {selectedFileInspector.filename}</span>
+                </h5>
+                <button onClick={() => setSelectedFileInspector(null)} className="btn-modal-close" type="button">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
               </div>
 
-              <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '350px', fontFamily: 'monospace' }}>
-                <code>{selectedFileInspector.content}</code>
-              </pre>
-            </div>
+              <div className="modal-body-content">
+                <div className="d-flex gap-3 mb-3 fs-7 text-muted border-bottom pb-2">
+                  <div><strong>Size:</strong> {Math.round((selectedFileInspector.content ? selectedFileInspector.content.length : 0) / 1024 * 10) / 10} KB</div>
+                  <div><strong>Lines:</strong> {selectedFileInspector.content ? selectedFileInspector.content.split('\n').length : 0}</div>
+                  <div><strong>Extension:</strong> .{selectedFileInspector.filename.split('.').pop()}</div>
+                </div>
 
-            <div className="modal-actions-custom d-flex justify-content-between align-items-center mt-4 border-top pt-3">
-              <button 
-                type="button" 
-                onClick={() => deleteFile(selectedFileInspector.filename)} 
-                className="btn btn-danger d-flex align-items-center gap-2 px-3 py-1.5 fs-7"
-              >
-                <i className="fa-solid fa-trash"></i>
-                Delete File
-              </button>
-              <button type="button" onClick={() => setSelectedFileInspector(null)} className="btn btn-secondary px-3 py-1.5 fs-7">
-                Close Inspector
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '350px', fontFamily: 'monospace' }}>
+                  <code>{selectedFileInspector.content}</code>
+                </pre>
+              </div>
+
+              <div className="modal-actions-custom d-flex justify-content-between align-items-center mt-4 border-top pt-3">
+                <button 
+                  type="button" 
+                  onClick={() => deleteFile(selectedFileInspector.filename)} 
+                  className="btn btn-danger d-flex align-items-center gap-2 px-3 py-1.5 fs-7"
+                >
+                  <i className="fa-solid fa-trash"></i>
+                  Delete File
+                </button>
+                <button type="button" onClick={() => setSelectedFileInspector(null)} className="btn btn-secondary px-3 py-1.5 fs-7">
+                  Close Inspector
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Action Button (AI Chatbot) */}
       <button 
