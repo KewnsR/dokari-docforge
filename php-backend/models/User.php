@@ -82,5 +82,29 @@ class User {
             return ['error' => 'Failed to login: ' . $e->getMessage()];
         }
     }
+    
+    public function updateProfile($userId, $newPassword) {
+        if (!$this->conn) return ['error' => 'Database connection failed'];
+        
+        $newPassword = trim($newPassword);
+        if (strlen($newPassword) < 6) {
+            return ['error' => 'Password must be at least 6 characters long'];
+        }
+        
+        try {
+            $hashed_password = password_hash($newPassword, PASSWORD_DEFAULT);
+            $query = "UPDATE " . $this->table_name . " SET password = :password WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':password' => $hashed_password,
+                ':id' => $userId
+            ]);
+            
+            return ['success' => true, 'message' => 'Password updated successfully'];
+        } catch (PDOException $e) {
+            error_log("Database error in updateProfile: " . $e->getMessage());
+            return ['error' => 'Failed to update profile: ' . $e->getMessage()];
+        }
+    }
 }
 ?>

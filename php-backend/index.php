@@ -80,7 +80,17 @@ if ($path === '' || $path === '/' || $path === '/api') {
         exit;
     }
     
-    if ($path === '/api/projects') {
+    if ($path === '/api/auth/profile') {
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $userModel = new User();
+            $res = $userModel->updateProfile($userId, $data['password'] ?? '');
+            if (isset($res['error'])) {
+                http_response_code(400);
+            }
+            echo json_encode($res);
+        }
+    } elseif ($path === '/api/projects') {
         if ($method === 'GET') {
             $projectModel = new Project();
             echo json_encode($projectModel->getAll($userId));
