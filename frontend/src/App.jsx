@@ -147,9 +147,66 @@ const findLocalAnswer = (question) => {
   return "I noticed your question might be about a topic outside the scope of this platform. As the Dokari Companion, I specialize in help queries about Dokari itself! \n\nDokari is an automated technical documentation workspace. It lets you upload source files, tracks code documentation health, and generates professional API specifications, README.md files, and architecture diagrams.\n\nCould you please ask me about one of these features or how to use the workspace?";
 };
 
+// DecryptedText component for scrambled text reveal effects
+function DecryptedText({ text, interval = 25, delay = 0, hoverTrigger = false }) {
+  const [displayText, setDisplayText] = useState(text);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*+=-";
+
+  const runAnimation = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    let iteration = 0;
+    
+    const timer = setInterval(() => {
+      setDisplayText(
+        text
+          .split("")
+          .map((char, index) => {
+            if (char === " ") return " ";
+            if (index < iteration) {
+              return text[index];
+            }
+            return chars[Math.floor(Math.random() * chars.length)];
+          })
+          .join("")
+      );
+
+      if (iteration >= text.length) {
+        clearInterval(timer);
+        setIsAnimating(false);
+      }
+      
+      iteration += 1;
+    }, interval);
+  };
+
+  useEffect(() => {
+    if (hoverTrigger) return;
+    const timeout = setTimeout(() => {
+      runAnimation();
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [text]);
+
+  const handleMouseEnter = () => {
+    if (hoverTrigger) {
+      runAnimation();
+    }
+  };
+
+  return (
+    <span onMouseEnter={handleMouseEnter} style={{ display: 'inline-block' }}>
+      {displayText}
+    </span>
+  );
+}
+
 // Splash Landing Page component for unauthenticated visitors
 function SplashLandingPage({ onLoginClick, onRegisterClick }) {
   const [demoTab, setDemoTab] = useState('raw');
+  const [isHovered, setIsHovered] = useState(false);
+  const [displayedScore, setDisplayedScore] = useState(42);
 
   const rawCodeSample = `class UserAuthentication:
     def __init__(self, db_session):
@@ -161,24 +218,107 @@ function SplashLandingPage({ onLoginClick, onRegisterClick }) {
             return {"status": "success", "token": "jwt_token_xyz"}
         return {"status": "error", "message": "Invalid credentials"}`;
 
-  const apiDocSample = `# API Specification: auth_service.py
+  const apiDocSample = `class UserAuthentication:
+    """
+    Handles system credentials validation and session token generation.
+    
+    Attributes:
+        db (Session): Database connection context session.
+    """
+    def __init__(self, db_session):
+        """Initializes database session context."""
+        self.db = db_session
 
-### Class: \`UserAuthentication\`
-Handles system credentials validation and session token generation.
+    def login(self, username, password):
+        """
+        Validates user credentials against the database store.
+        
+        Args:
+            username (str): The login credential username query.
+            password (str): The raw text password to verify.
+            
+        Returns:
+            dict: Status code with JWT session token or error payload.
+        """
+        user = self.db.query(username)
+        if user and user.verify_password(password):
+            return {"status": "success", "token": "jwt_token_xyz"}
+        return {"status": "error", "message": "Invalid credentials"}`;
 
-#### Methods:
-* **\`__init__(db_session)\`**: Initializes database context.
-* **\`login(username, password)\`**:
-  - **Returns**: \`dict\` containing session token or error message.`;
+  const healthMetrics = [
+    { label: 'Comment Density', value: 74, color: 'var(--warning)' },
+    { label: 'Docstring Coverage', value: 85, color: 'var(--success)' },
+    { label: 'Parameter Clarity', value: 90, color: 'var(--success)' },
+    { label: 'Naming Consistency', value: 96, color: 'var(--success)' },
+    { label: 'Overall Quality Score', value: 92, color: 'var(--success)' }
+  ];
 
-  const healthSample = `{\n  "doc_health_score": 42,\n  "comment_density": "12%",\n  "suggestions": [\n    "Missing docstring for class UserAuthentication",\n    "Parameter types missing for login(username, password)"\n  ]\n}`;
+  // Auto-cycling tabs
+  useEffect(() => {
+    if (isHovered) return;
+    const tabs = ['raw', 'docs', 'health'];
+    const interval = setInterval(() => {
+      setDemoTab(prev => {
+        const idx = tabs.indexOf(prev);
+        return tabs[(idx + 1) % tabs.length];
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isHovered]);
+
+  // Score count-up logic
+  useEffect(() => {
+    let start = 0;
+    const end = demoTab === 'raw' ? 42 : 92;
+    const duration = 800;
+    const stepTime = Math.abs(Math.floor(duration / (end || 1)));
+    
+    const timer = setInterval(() => {
+      start += 1;
+      if (start >= end) {
+        setDisplayedScore(end);
+        clearInterval(timer);
+      } else {
+        setDisplayedScore(start);
+      }
+    }, stepTime);
+    
+    return () => clearInterval(timer);
+  }, [demoTab]);
+
+  // Card cursor-following radial glow tracking
+  const handleCardMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  };
+
+  // Scroll reveal observer
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const targets = document.querySelectorAll('.reveal-on-scroll');
+    targets.forEach(t => observer.observe(t));
+
+    return () => observer.disconnect();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.08
       }
     }
   };
@@ -206,9 +346,10 @@ Handles system credentials validation and session token generation.
       {/* Hero Section */}
       <section className="splash-hero text-center py-5 px-3">
         <div className="container" style={{ maxWidth: '1000px' }}>
-          <motion.div variants={itemVariants} className="hero-badge mb-3 d-inline-block px-3 py-1.5 rounded-pill shadow-sm">
+          <motion.div variants={itemVariants} className="hero-badge mb-3 d-inline-flex px-3 py-1.5 rounded-pill shadow-sm align-items-center">
+            <span className="pulse-dot"></span>
             <i className="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>
-            <span>AI-Powered Technical Documentation Workspace</span>
+            <span><DecryptedText text="AI-Powered Technical Documentation Workspace" delay={400} interval={12} /></span>
           </motion.div>
           <motion.h1 variants={itemVariants} className="hero-title fw-bold mb-3 display-4">
             Automate Your Codebase <span className="text-primary-gradient">Documentation & Health</span>
@@ -218,60 +359,141 @@ Handles system credentials validation and session token generation.
           </motion.p>
           
           <motion.div variants={itemVariants} className="hero-cta-group d-flex justify-content-center gap-3 mb-5">
-            <button onClick={onRegisterClick} className="btn btn-primary btn-lg px-4 py-2.5 fw-bold shadow-lg">
+            <motion.button 
+              whileTap={{ scale: 0.96 }}
+              onClick={onRegisterClick} 
+              className="btn btn-primary btn-lg px-4 py-2.5 fw-bold shadow-lg btn-primary-glow"
+            >
               Get Started Free <i className="fa-solid fa-arrow-right ms-2"></i>
-            </button>
-            <button onClick={onLoginClick} className="btn btn-secondary btn-lg px-4 py-2.5 fw-semibold">
+            </motion.button>
+            <motion.button 
+              whileTap={{ scale: 0.96 }}
+              onClick={onLoginClick} 
+              className="btn btn-secondary btn-lg px-4 py-2.5 fw-semibold"
+            >
               Sign In to Workspace
-            </button>
+            </motion.button>
           </motion.div>
 
           {/* Interactive Live Demo Transformation Widget */}
-          <motion.div variants={itemVariants} className="live-demo-card p-4 rounded-4 bg-card border shadow-lg text-start mx-auto" style={{ maxWidth: '850px' }}>
-            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom pb-3 gap-2">
+          <motion.div 
+            variants={itemVariants} 
+            className="live-demo-card p-4 rounded-4 bg-card border shadow-lg text-start mx-auto" 
+            style={{ maxWidth: '850px' }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {/* Floating Circular Doc Health Badge */}
+            <div className="floating-score-badge">
+              <svg width="70" height="70" className="progress-ring-badge">
+                <circle cx="35" cy="35" r="30" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+                <motion.circle 
+                  cx="35" 
+                  cy="35" 
+                  r="30" 
+                  fill="transparent" 
+                  stroke={demoTab === 'raw' ? 'var(--error)' : 'var(--success)'}
+                  strokeWidth="4"
+                  strokeDasharray="188.4"
+                  animate={{ strokeDashoffset: 188.4 - (188.4 * (demoTab === 'raw' ? 42 : 92)) / 100 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              </svg>
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ zIndex: 2 }}>
+                <span className="fw-bold fs-5" style={{ color: demoTab === 'raw' ? 'var(--error)' : 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  {displayedScore}%
+                </span>
+                <span className="text-muted" style={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '2px' }}>
+                  Doc Health
+                </span>
+              </div>
+            </div>
+
+            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-3 gap-2 live-demo-card-header">
               <div className="d-flex align-items-center gap-2">
-                <span className="dot bg-danger rounded-circle d-inline-block" style={{ width: 10, height: 10 }}></span>
-                <span className="dot bg-warning rounded-circle d-inline-block" style={{ width: 10, height: 10 }}></span>
-                <span className="dot bg-success rounded-circle d-inline-block" style={{ width: 10, height: 10 }}></span>
-                <span className="ms-2 fw-semibold fs-7 text-muted">auth_service.py — Live Transformation Preview</span>
+                <span className="dot bg-danger rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
+                <span className="dot bg-warning rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
+                <span className="dot bg-success rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
+                <span className="ms-2 fw-semibold fs-7 text-muted" style={{ fontFamily: 'var(--font-mono)' }}>auth_service.py — Live Preview</span>
               </div>
 
-              <div className="demo-tab-switcher d-flex gap-1 bg-panel p-1 rounded-3">
+              <div className="demo-tab-switcher d-flex gap-1 p-1 bg-panel rounded-3">
                 <button 
                   onClick={() => setDemoTab('raw')} 
-                  className={`btn btn-sm px-2.5 py-1 fs-7 ${demoTab === 'raw' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+                  className={`demo-tab-btn ${demoTab === 'raw' ? 'active' : ''}`}
                 >
-                  <i className="fa-solid fa-code me-1.5"></i>Raw Code
+                  <i className="fa-solid fa-code me-2"></i>Raw Code
                 </button>
                 <button 
                   onClick={() => setDemoTab('docs')} 
-                  className={`btn btn-sm px-2.5 py-1 fs-7 ${demoTab === 'docs' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+                  className={`demo-tab-btn ${demoTab === 'docs' ? 'active' : ''}`}
                 >
-                  <i className="fa-solid fa-file-lines me-1.5"></i>AI Spec
+                  <i className="fa-solid fa-file-lines me-2"></i>AI Spec
                 </button>
                 <button 
                   onClick={() => setDemoTab('health')} 
-                  className={`btn btn-sm px-2.5 py-1 fs-7 ${demoTab === 'health' ? 'btn-primary shadow-sm' : 'text-secondary'}`}
+                  className={`demo-tab-btn ${demoTab === 'health' ? 'active' : ''}`}
                 >
-                  <i className="fa-solid fa-heart-pulse me-1.5"></i>Health Report
+                  <i className="fa-solid fa-heart-pulse me-2"></i>Health Report
                 </button>
               </div>
             </div>
 
-            <pre className="p-3 rounded-3 bg-dark text-light m-0 fs-7 overflow-auto" style={{ maxHeight: '220px', fontFamily: 'monospace' }}>
-              <code>
-                {demoTab === 'raw' && rawCodeSample}
-                {demoTab === 'docs' && apiDocSample}
-                {demoTab === 'health' && healthSample}
-              </code>
-            </pre>
+            <div style={{ minHeight: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <AnimatePresence mode="wait">
+                {demoTab === 'health' ? (
+                  <motion.div 
+                    key="health"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.22 }}
+                    className="d-flex flex-column gap-3 p-3 bg-panel rounded-3 text-start"
+                  >
+                    <div className="d-flex flex-column gap-2.5">
+                      {healthMetrics.map((m, idx) => (
+                        <div key={idx} className="metric-row">
+                          <div className="d-flex justify-content-between align-items-center mb-1 fs-7" style={{ fontFamily: 'var(--font-mono)' }}>
+                            <span className="fw-semibold text-secondary">{m.label}</span>
+                            <span className="fw-bold" style={{ color: m.color }}>{m.value}%</span>
+                          </div>
+                          <div className="progress-bar-bg rounded-pill" style={{ height: '8px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${m.value}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                              className="progress-bar-fill h-100 rounded-pill"
+                              style={{ backgroundColor: m.color }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.pre 
+                    key={demoTab}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.22 }}
+                    className="demo-code-block"
+                  >
+                    <code>
+                      {demoTab === 'raw' && rawCodeSample}
+                      {demoTab === 'docs' && apiDocSample}
+                    </code>
+                  </motion.pre>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Tech Stack Pills Bar */}
       <motion.section variants={itemVariants} className="tech-stack-bar py-3 border-top border-bottom bg-panel text-center mb-5">
-        <div className="container d-flex flex-wrap align-items-center justify-content-center gap-4 fs-7 text-muted fw-medium">
+        <div className="container d-flex flex-wrap align-items-center justify-content-center gap-4 fs-7 text-muted fw-medium" style={{ fontFamily: 'var(--font-mono)' }}>
           <span><i className="fa-brands fa-python me-1.5 text-info"></i>Python 3.x</span>
           <span><i className="fa-brands fa-js me-1.5 text-warning"></i>JavaScript & TypeScript</span>
           <span><i className="fa-brands fa-php me-1.5 text-primary"></i>PHP 8.x</span>
@@ -280,15 +502,15 @@ Handles system credentials validation and session token generation.
       </motion.section>
 
       {/* Features Grid */}
-      <motion.section variants={itemVariants} className="splash-features py-4 px-4 container mb-5">
+      <motion.section variants={itemVariants} id="features" className="splash-features py-4 px-4 container mb-5 reveal-on-scroll">
         <div className="text-center mb-5">
           <h2 className="section-title h3 fw-bold mb-2">Everything You Need for Clean Code Docs</h2>
           <p className="text-muted">Built for modern software developers, powered by Google Gemini.</p>
         </div>
 
         <div className="row g-4">
-          <div className="col-md-6 col-lg-3">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border">
+          <div className="col-md-6 col-lg-3 reveal-on-scroll">
+            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
               <div className="feature-icon-wrapper mb-3 text-primary fs-3">
                 <i className="fa-solid fa-heart-pulse"></i>
               </div>
@@ -299,8 +521,8 @@ Handles system credentials validation and session token generation.
             </div>
           </div>
 
-          <div className="col-md-6 col-lg-3">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border">
+          <div className="col-md-6 col-lg-3 reveal-on-scroll">
+            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
               <div className="feature-icon-wrapper mb-3 text-primary fs-3">
                 <i className="fa-solid fa-code"></i>
               </div>
@@ -311,8 +533,8 @@ Handles system credentials validation and session token generation.
             </div>
           </div>
 
-          <div className="col-md-6 col-lg-3">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border">
+          <div className="col-md-6 col-lg-3 reveal-on-scroll">
+            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
               <div className="feature-icon-wrapper mb-3 text-primary fs-3">
                 <i className="fa-solid fa-file-lines"></i>
               </div>
@@ -323,8 +545,8 @@ Handles system credentials validation and session token generation.
             </div>
           </div>
 
-          <div className="col-md-6 col-lg-3">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border">
+          <div className="col-md-6 col-lg-3 reveal-on-scroll">
+            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
               <div className="feature-icon-wrapper mb-3 text-primary fs-3">
                 <i className="fa-solid fa-diagram-project"></i>
               </div>
@@ -338,11 +560,11 @@ Handles system credentials validation and session token generation.
       </motion.section>
 
       {/* How It Works */}
-      <motion.section variants={itemVariants} className="splash-workflow py-4 px-4 container mb-5">
+      <motion.section variants={itemVariants} id="workflow" className="splash-workflow py-4 px-4 container mb-5 reveal-on-scroll">
         <div className="p-5 rounded-3 bg-panel border text-center">
           <h3 className="fw-bold mb-4">Three Simple Steps to Documentation Mastery</h3>
           <div className="row g-4 text-start">
-            <div className="col-md-4">
+            <div className="col-md-4 reveal-on-scroll">
               <div className="d-flex align-items-start gap-3">
                 <span className="step-number badge fs-5 px-3 py-2 rounded-circle">1</span>
                 <div>
@@ -351,7 +573,7 @@ Handles system credentials validation and session token generation.
                 </div>
               </div>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-4 reveal-on-scroll">
               <div className="d-flex align-items-start gap-3">
                 <span className="step-number badge fs-5 px-3 py-2 rounded-circle">2</span>
                 <div>
@@ -360,7 +582,7 @@ Handles system credentials validation and session token generation.
                 </div>
               </div>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-4 reveal-on-scroll">
               <div className="d-flex align-items-start gap-3">
                 <span className="step-number badge fs-5 px-3 py-2 rounded-circle">3</span>
                 <div>
@@ -372,6 +594,29 @@ Handles system credentials validation and session token generation.
           </div>
         </div>
       </motion.section>
+
+      {/* Footer Section */}
+      <footer className="splash-footer py-5 border-top bg-panel text-center reveal-on-scroll">
+        <div className="container" style={{ maxWidth: '1000px' }}>
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-4">
+            <div className="logo-section d-flex align-items-center">
+              <div className="brand-logo-container me-2">
+                <i className="fa-solid fa-cubes-stacked text-primary"></i>
+              </div>
+              <span className="brand-name"><DecryptedText text="Dokari" hoverTrigger={true} interval={45} /></span>
+            </div>
+            <div className="d-flex gap-4">
+              <a href="#features" className="nav-link-custom fs-7">Features</a>
+              <a href="#workflow" className="nav-link-custom fs-7">How it Works</a>
+              <a href="#privacy" className="nav-link-custom fs-7">Privacy Policy</a>
+              <a href="#github" className="nav-link-custom fs-7"><i className="fa-brands fa-github me-1"></i>GitHub</a>
+            </div>
+            <div className="fs-7 text-muted" style={{ fontFamily: 'var(--font-mono)' }}>
+              &copy; {new Date().getFullYear()} Dokari Workspace. All rights reserved.
+            </div>
+          </div>
+        </div>
+      </footer>
     </motion.div>
   );
 }
@@ -379,6 +624,20 @@ Handles system credentials validation and session token generation.
 export default function App() {
   // Theme State
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [scrolled, setScrolled] = useState(false);
+
+  // Scroll listener for sticky header styling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 15) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Auth States
   const [user, setUser] = useState(() => {
@@ -387,6 +646,11 @@ export default function App() {
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsPassword, setSettingsPassword] = useState('');
+  const [settingsModel, setSettingsModel] = useState(() => localStorage.getItem('apiModel') || 'gemini-2.5-flash');
+  const [settingsDisplayName, setSettingsDisplayName] = useState(() => localStorage.getItem('displayName') || '');
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -677,6 +941,58 @@ export default function App() {
     localStorage.removeItem('user');
     setShowLogoutModal(false);
     showToast('Logged out successfully', 'info');
+  };
+
+  const handleUpdateProfile = (e) => {
+    e.preventDefault();
+    if (!settingsPassword.trim()) {
+      if (settingsDisplayName.trim()) {
+        localStorage.setItem('displayName', settingsDisplayName.trim());
+      } else {
+        localStorage.removeItem('displayName');
+      }
+      localStorage.setItem('apiModel', settingsModel);
+      showToast('Settings saved successfully', 'success');
+      setShowSettingsModal(false);
+      return;
+    }
+
+    if (settingsPassword.length < 6) {
+      showToast('Password must be at least 6 characters long', 'warning');
+      return;
+    }
+
+    setSettingsLoading(true);
+    fetch(`${BACKEND_URL}/api/auth/profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': String(user.id)
+      },
+      body: JSON.stringify({ password: settingsPassword })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => { throw new Error(err.error || 'Failed to update profile'); });
+        }
+        return res.json();
+      })
+      .then(data => {
+        setSettingsLoading(false);
+        if (settingsDisplayName.trim()) {
+          localStorage.setItem('displayName', settingsDisplayName.trim());
+        } else {
+          localStorage.removeItem('displayName');
+        }
+        localStorage.setItem('apiModel', settingsModel);
+        showToast('Password and profile settings updated successfully', 'success');
+        setSettingsPassword('');
+        setShowSettingsModal(false);
+      })
+      .catch(err => {
+        setSettingsLoading(false);
+        showToast(err.message, 'danger');
+      });
   };
 
   // Load Projects from Database
@@ -1217,12 +1533,12 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="main-header d-flex justify-content-between align-items-center px-4 py-3">
+      <header className={`main-header d-flex justify-content-between align-items-center px-4 py-3 ${scrolled ? 'scrolled' : ''}`}>
         <div className="logo-section d-flex align-items-center">
           <div className="brand-logo-container me-2">
             <i className="fa-solid fa-cubes-stacked text-primary"></i>
           </div>
-          <span className="brand-name">Dokari</span>
+          <span className="brand-name"><DecryptedText text="Dokari" hoverTrigger={true} interval={45} /></span>
           <span className="badge bg-secondary ms-2 text-uppercase">v1.0</span>
         </div>
 
@@ -1234,12 +1550,16 @@ export default function App() {
                 <span className="status-text">{backendOnline ? 'API Connected' : 'API Offline'}</span>
               </div>
 
-              <div className="user-profile d-flex align-items-center gap-2">
+              <button 
+                onClick={() => setShowSettingsModal(true)} 
+                className="user-profile-btn"
+                title="Profile Settings"
+              >
                 <div className="user-avatar">
                   <i className="fa-solid fa-user"></i>
                 </div>
-                <span className="user-name">{user.username}</span>
-              </div>
+                <span className="user-name text-light">{settingsDisplayName || user.username}</span>
+              </button>
 
               <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
                 <motion.div
@@ -1930,6 +2250,93 @@ export default function App() {
               </form>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Profile & Settings Modal */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="modal-backdrop-custom d-flex align-items-center justify-content-center">
+            <motion.div 
+              initial={{ scale: 0.93, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.93, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="modal-card text-start"
+              style={{ maxWidth: '440px', width: '95%' }}
+            >
+              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                <h5 className="modal-title fw-bold m-0"><i className="fa-solid fa-user-gear text-primary me-2"></i>Workspace Settings</h5>
+                <button onClick={() => { setShowSettingsModal(false); setSettingsPassword(''); }} className="btn-modal-close" type="button" title="Close">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateProfile} className="d-flex flex-column gap-3">
+                <div className="form-group">
+                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Username (Read-only)</label>
+                  <input 
+                    type="text" 
+                    className="form-control-custom bg-panel border text-muted" 
+                    value={user?.username || ''} 
+                    disabled 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Display Name</label>
+                  <input 
+                    type="text" 
+                    className="form-control-custom bg-panel border" 
+                    placeholder="Enter full display name..."
+                    value={settingsDisplayName}
+                    onChange={(e) => setSettingsDisplayName(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Gemini Model Preference</label>
+                  <select 
+                    className="form-control-custom w-100 p-2 rounded cursor-pointer"
+                    style={{ fontSize: '0.875rem' }}
+                    value={settingsModel}
+                    onChange={(e) => setSettingsModel(e.target.value)}
+                  >
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast, Recommended)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Advanced Logic)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Update Password</label>
+                  <input 
+                    type="password" 
+                    className="form-control-custom bg-panel border" 
+                    placeholder="Enter new password (optional)..."
+                    value={settingsPassword}
+                    onChange={(e) => setSettingsPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="modal-actions-custom d-flex justify-content-end gap-2 mt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => { setShowSettingsModal(false); setSettingsPassword(''); }} 
+                    className="btn btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary btn-primary-glow"
+                    disabled={settingsLoading}
+                  >
+                    {settingsLoading ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
