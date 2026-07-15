@@ -1,15 +1,15 @@
 {
-  "name": "dokari",
+  "name": "docforge-root",
   "version": "1.0.0",
-  "description": "Dokari - AI-Powered Technical Documentation Companion",
+  "private": true,
   "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "start": "npm --prefix frontend run dev",
     "start:frontend": "npm --prefix frontend run dev",
-    "start:backend": "php -S 0.0.0.0:8080 php-backend/router.php",
     "start:ai": "python flask-ai/app.py",
-    "docker:up": "docker-compose up --build",
-    "docker:down": "docker-compose down"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+    "start:backend": "php -S localhost:8080 -t php-backend php-backend/router.php",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview"
+  }
 }
