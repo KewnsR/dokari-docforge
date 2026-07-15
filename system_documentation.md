@@ -4,21 +4,6 @@ Dokari is a technical documentation generator. It parses codebase files, compute
 
 ---
 
-## Brand Name & Meaning
-
-The name **Dokari** represents the core essence of the documentation platform through three etymologies:
-
-1.  **"The Document Maker" (Sanskrit / Hindi Connection)**:
-    *   **Dok**: Shorthand for *Document*.
-    *   **Kari** (कारी): A Sanskrit/Hindi suffix meaning *maker*, *creator*, or *efficient doer*.
-    *   **Definition**: *"The Creator of Documents"*, representing the automated, efficient generation of files.
-2.  **"Bringing Light to Code" (Japanese Connection)**:
-    *   **Dok**: Shorthand for *Dokument* (Document).
-    *   **Hikari** (光): The Japanese word for *light* or *clarity*.
-    *   **Definition**: *"Document Clarity"*, representing how the health analyzer sheds light on the codebase by grading comment quality.
-
----
-
 ## 1. System Architecture
 
 Dokari is designed as a secure, containerized multi-service web application composed of five primary layers:
