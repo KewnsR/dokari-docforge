@@ -82,10 +82,11 @@ def generate_api_docs():
     data = request.json
     project_id = data.get('project_id')
     files_content = data.get('files_content', [])
+    requested_model = data.get('model')
     
     try:
-        logger.info(f"Generating API docs for project {project_id}")
-        api_docs = ai_processor.generate_api_documentation(files_content)
+        logger.info(f"Generating API docs for project {project_id} using model {requested_model}")
+        api_docs = ai_processor.generate_api_documentation(files_content, requested_model=requested_model)
         return jsonify({
             'success': True,
             'documentation': api_docs,
@@ -102,10 +103,11 @@ def generate_readme():
     data = request.json
     project_info = data.get('project_info', {})
     files_content = data.get('files_content', [])
+    requested_model = data.get('model')
     
     try:
-        logger.info(f"Generating README for project {project_info.get('name', 'Unknown')}")
-        readme = ai_processor.generate_readme(project_info, files_content)
+        logger.info(f"Generating README for project {project_info.get('name', 'Unknown')} using model {requested_model}")
+        readme = ai_processor.generate_readme(project_info, files_content, requested_model=requested_model)
         return jsonify({
             'success': True,
             'readme': readme,
@@ -121,10 +123,11 @@ def generate_diagram():
     """Generate architecture diagram"""
     data = request.json
     code_structure = data.get('code_structure', {})
+    requested_model = data.get('model')
     
     try:
-        logger.info("Generating architecture diagram")
-        mermaid_code = ai_processor.generate_architecture_mermaid(code_structure)
+        logger.info(f"Generating architecture diagram using model {requested_model}")
+        mermaid_code = ai_processor.generate_architecture_mermaid(code_structure, requested_model=requested_model)
         return jsonify({
             'success': True,
             'mermaid_code': mermaid_code,

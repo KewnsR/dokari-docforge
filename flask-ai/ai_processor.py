@@ -45,10 +45,14 @@ class AIProcessor:
             "gemini-3-flash-preview"
         ]
 
-    def _generate_content_with_fallback(self, contents, system_instruction=None, generation_config=None):
+    def _generate_content_with_fallback(self, contents, system_instruction=None, generation_config=None, requested_model=None):
         """Generates content using a list of fallback models if quota is exceeded"""
+        models = self.models_fallback
+        if requested_model:
+            models = [requested_model] + self.models_fallback
+            
         last_exception = None
-        for model_name in self.models_fallback:
+        for model_name in models:
             try:
                 model = genai.GenerativeModel(
                     model_name=model_name,
@@ -72,14 +76,15 @@ class AIProcessor:
             raise last_exception
         raise Exception("No fallback models succeeded")
     
-    def generate_api_documentation(self, files_content: List[Dict]) -> str:
+    def generate_api_documentation(self, files_content: List[Dict], requested_model: str = None) -> str:
         """Generate API documentation strictly grounded in uploaded code files"""
         prompt = self._create_api_doc_prompt(files_content)
         
         try:
             response = self._generate_content_with_fallback(
                 prompt,
-                system_instruction=self.system_prompt
+                system_instruction=self.system_prompt,
+                requested_model=requested_model
             )
             return f"""# Dokari Generated API Documentation
 
@@ -103,7 +108,7 @@ Documentation generation encountered an issue. Please check your Gemini API conf
 *Dokari - Making documentation easy*
 """
     
-    def generate_readme(self, project_info: Dict, files_content: List[Dict]) -> str:
+    def generate_readme(self, project_info: Dict, files_content: List[Dict], requested_model: str = None) -> str:
         """Generate README.md content directly based on all source code files"""
         files_details = ""
         for file in files_content:
@@ -140,7 +145,8 @@ STRICT INSTRUCTIONS:
         try:
             response = self._generate_content_with_fallback(
                 prompt,
-                system_instruction=self.system_prompt
+                system_instruction=self.system_prompt,
+                requested_model=requested_model
             )
             return f"""{response.text}
 
@@ -266,7 +272,7 @@ Code files to analyze:
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def generate_architecture_mermaid(self, codebase_structure: dict) -> str:
+    def generate_architecture_mermaid(self, codebase_structure: dict, requested_model: str = None) -> str:
         """Generates a highly accurate Mermaid.js architecture diagram representing the actual uploaded files"""
         files = codebase_structure.get('files', [])
         if not files:
@@ -291,7 +297,7 @@ Code files to analyze:
             prompt += "\n"
             
         try:
-            response = self._generate_content_with_fallback(prompt)
+            response = self._generate_content_with_fallback(prompt, requested_model=requested_model)
             content = response.text.strip()
             # Clean up potential markdown fences if Gemini included them anyway
             if content.startswith("```mermaid"):
