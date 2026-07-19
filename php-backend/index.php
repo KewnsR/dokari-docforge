@@ -15,6 +15,18 @@ require_once 'models/Project.php';
 require_once 'models/Document.php';
 require_once 'models/User.php';
 
+// Run DB migration for user tiers if columns don't exist
+try {
+    $db = new Database();
+    $conn = $db->getConnection();
+    if ($conn && method_exists($conn, 'exec')) {
+        $conn->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS tier VARCHAR(20) DEFAULT 'free';");
+        $conn->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS usage_count INTEGER DEFAULT 0;");
+    }
+} catch (Exception $e) {
+    // Ignore migration exception
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = str_replace('/index.php', '', $path);
@@ -84,7 +96,29 @@ if ($path === '' || $path === '/' || $path === '/api') {
         if ($method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $userModel = new User();
-            $res = $userModel->updateProfile($userId, $data['password'] ?? '');
+            if (isset($data['action']) && $data['action'] === 'upgrade') {
+                $res = $userModel->upgradeTier($userId, 'premium');
+            } else {
+                $res = $userModel->updateProfile($userId, $data['password'] ?? '');
+            }
+            if (isset($res['error'])) {
+                http_response_code(400);
+            }
+            echo json_encode($res);
+        } elseif ($method === 'GET') {
+            $userModel = new User();
+            $profile = $userModel->getProfile($userId);
+            if (!$profile) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Profile not found']);
+            } else {
+                echo json_encode($profile);
+            }
+        }
+    } elseif ($path === '/api/auth/profile/usage') {
+        if ($method === 'POST') {
+            $userModel = new User();
+            $res = $userModel->incrementUsage($userId);
             if (isset($res['error'])) {
                 http_response_code(400);
             }
@@ -137,6 +171,50 @@ if ($path === '' || $path === '/' || $path === '/api') {
                 $stmt->execute([':project_id' => $projectId]);
                 $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 echo json_encode($files);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Database connection failed']);
+            }
+        } elseif ($method === 'DELETE') {
+            $projectModel = new Project();
+            $project = $projectModel->getById($projectId, $userId);
+            if (!$project) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Access denied to this project']);
+                exit;
+            }
+
+            $filename = $_GET['filename'] ?? '';
+            if (empty($filename)) {
+                $data = json_decode(file_get_contents('php://input'), true);
+                $filename = $data['filename'] ?? '';
+            }
+
+
+            if (empty($filename)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Filename is required']);
+                exit;
+            }
+
+            $database = new Database();
+            $conn = $database->getConnection();
+            if ($conn) {
+                // Delete file metadata and contents from SQLite
+                $query = "DELETE FROM files WHERE project_id = :project_id AND filename = :filename";
+                $stmt = $conn->prepare($query);
+                $res = $stmt->execute([
+                    ':project_id' => $projectId,
+                    ':filename' => $filename
+                ]);
+
+                // Also delete physical upload file if it exists
+                $physicalPath = __DIR__ . '/uploads/' . $projectId . '/' . basename($filename);
+                if (file_exists($physicalPath)) {
+                    @unlink($physicalPath);
+                }
+
+                echo json_encode(['success' => $res, 'message' => 'File deleted successfully']);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Database connection failed']);

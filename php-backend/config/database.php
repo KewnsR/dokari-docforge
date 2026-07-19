@@ -42,7 +42,24 @@ class DokariFallbackStatement {
         if (strpos($sql, 'WHERE username = :username') !== false && (strpos($sql, 'users') !== false || strpos($sql, 'table_name') !== false)) {
             foreach ($db['users'] as $u) {
                 if (strtolower($u['username']) === strtolower($params[':username'] ?? '')) {
-                    $this->data[] = ['id' => (int)$u['id'], 'username' => $u['username'], 'password' => $u['password']];
+                    $this->data[] = [
+                        'id' => (int)$u['id'], 
+                        'username' => $u['username'], 
+                        'password' => $u['password'],
+                        'tier' => $u['tier'] ?? 'free',
+                        'usage_count' => (int)($u['usage_count'] ?? 0)
+                    ];
+                }
+            }
+        } else if (strpos($sql, 'FROM users') !== false && strpos($sql, 'WHERE id = :id') !== false) {
+            foreach ($db['users'] as $u) {
+                if ((int)$u['id'] === (int)($params[':id'] ?? 0)) {
+                    $this->data[] = [
+                        'id' => (int)$u['id'],
+                        'username' => $u['username'],
+                        'tier' => $u['tier'] ?? 'free',
+                        'usage_count' => (int)($u['usage_count'] ?? 0)
+                    ];
                 }
             }
         } else if (strpos($sql, 'INSERT INTO users') !== false || (strpos($sql, 'INSERT INTO') !== false && strpos($sql, 'username') !== false)) {
@@ -51,11 +68,30 @@ class DokariFallbackStatement {
                 'id' => $newId,
                 'username' => $params[':username'] ?? '',
                 'password' => $params[':password'] ?? '',
+                'tier' => 'free',
+                'usage_count' => 0,
                 'created_at' => date('Y-m-d H:i:s')
             ];
             $db['users'][] = $newUser;
             $this->saveDB($db);
             $this->data[] = ['id' => $newId];
+        } else if (strpos($sql, 'UPDATE users') !== false || (strpos($sql, 'UPDATE') !== false && strpos($sql, 'password') !== false) || (strpos($sql, 'UPDATE') !== false && strpos($sql, 'tier') !== false)) {
+            foreach ($db['users'] as &$u) {
+                if ((int)$u['id'] === (int)($params[':id'] ?? 0)) {
+                    if (isset($params[':password'])) $u['password'] = $params[':password'];
+                    if (isset($params[':tier'])) $u['tier'] = $params[':tier'];
+                    if (strpos($sql, 'usage_count = usage_count + 1') !== false) {
+                        $u['usage_count'] = (int)($u['usage_count'] ?? 0) + 1;
+                    }
+                }
+            }
+            $this->saveDB($db);
+            // Fetch updated usage count for RETURNING usage_count queries
+            foreach ($db['users'] as $u) {
+                if ((int)$u['id'] === (int)($params[':id'] ?? 0)) {
+                    $this->data[] = ['usage_count' => (int)($u['usage_count'] ?? 0)];
+                }
+            }
         }
 
         // PROJECTS queries
@@ -89,14 +125,27 @@ class DokariFallbackStatement {
             $this->saveDB($db);
             $this->data[] = ['id' => $newId];
         } else if (strpos($sql, 'DELETE FROM projects') !== false || (strpos($sql, 'DELETE FROM') !== false && strpos($sql, 'user_id') !== false)) {
+            $projectId = (int)($params[':id'] ?? 0);
             $db['projects'] = array_values(array_filter($db['projects'], function($p) use ($params) {
                 return !((int)$p['id'] === (int)($params[':id'] ?? 0) && (int)$p['user_id'] === (int)($params[':user_id'] ?? 0));
+            }));
+            // Cascade delete files and documents for this project
+            $db['files'] = array_values(array_filter($db['files'], function($f) use ($projectId) {
+                return (int)$f['project_id'] !== $projectId;
+            }));
+            $db['documents'] = array_values(array_filter($db['documents'], function($d) use ($projectId) {
+                return (int)$d['project_id'] !== $projectId;
             }));
             $this->saveDB($db);
         }
 
         // FILES queries
-        else if (strpos($sql, 'FROM files') !== false) {
+        else if (strpos($sql, 'DELETE FROM files') !== false) {
+            $db['files'] = array_values(array_filter($db['files'], function($f) use ($params) {
+                return !((int)$f['project_id'] === (int)($params[':project_id'] ?? 0) && $f['filename'] === ($params[':filename'] ?? ''));
+            }));
+            $this->saveDB($db);
+        } else if (strpos($sql, 'FROM files') !== false) {
             if (strpos($sql, 'WHERE project_id = :project_id AND filename = :filename') !== false) {
                 foreach ($db['files'] as $f) {
                     if ((int)$f['project_id'] === (int)($params[':project_id'] ?? 0) && $f['filename'] === ($params[':filename'] ?? '')) {

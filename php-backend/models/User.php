@@ -63,7 +63,7 @@ class User {
         $password = trim($password);
         
         try {
-            $query = "SELECT id, username, password FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
+            $query = "SELECT id, username, password, tier, usage_count FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([':username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -72,6 +72,8 @@ class User {
                 return [
                     'id' => $user['id'],
                     'username' => $user['username'],
+                    'tier' => $user['tier'] ?? 'free',
+                    'usage_count' => (int)($user['usage_count'] ?? 0),
                     'message' => 'Login successful'
                 ];
             } else {
@@ -104,6 +106,46 @@ class User {
         } catch (PDOException $e) {
             error_log("Database error in updateProfile: " . $e->getMessage());
             return ['error' => 'Failed to update profile: ' . $e->getMessage()];
+        }
+    }
+
+    public function upgradeTier($userId, $tier) {
+        if (!$this->conn) return ['error' => 'Database connection failed'];
+        try {
+            $query = "UPDATE " . $this->table_name . " SET tier = :tier WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':tier' => $tier,
+                ':id' => $userId
+            ]);
+            return ['success' => true, 'tier' => $tier, 'message' => 'Tier updated successfully'];
+        } catch (PDOException $e) {
+            return ['error' => 'Failed to upgrade tier: ' . $e->getMessage()];
+        }
+    }
+
+    public function incrementUsage($userId) {
+        if (!$this->conn) return ['error' => 'Database connection failed'];
+        try {
+            $query = "UPDATE " . $this->table_name . " SET usage_count = usage_count + 1 WHERE id = :id RETURNING usage_count";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':id' => $userId]);
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+            return ['success' => true, 'usage_count' => (int)($res['usage_count'] ?? 0)];
+        } catch (PDOException $e) {
+            return ['error' => 'Failed to increment usage: ' . $e->getMessage()];
+        }
+    }
+
+    public function getProfile($userId) {
+        if (!$this->conn) return null;
+        try {
+            $query = "SELECT id, username, tier, usage_count FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':id' => $userId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
         }
     }
 }
