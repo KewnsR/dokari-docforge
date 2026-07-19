@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { marked } from 'marked';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import AppHeader from './components/AppHeader.jsx';
+import AppModals from './components/AppModals.jsx';
+import ChatWidget from './components/ChatWidget.jsx';
+import WorkspaceDashboard from './components/WorkspaceDashboard.jsx';
+import ToastStack from './components/ToastStack.jsx';
+import SplashLandingPage from './components/SplashLandingPage.jsx';
+import AuthPage from './components/AuthPage.jsx';
 
 // Resolve Backend and AI service URLs dynamically
 const HOST_IP = window.location.hostname || 'localhost';
@@ -202,429 +209,50 @@ function DecryptedText({ text, interval = 25, delay = 0, hoverTrigger = false })
   );
 }
 
-// Splash Landing Page component for unauthenticated visitors
-function SplashLandingPage({ onLoginClick, onRegisterClick }) {
-  const [demoTab, setDemoTab] = useState('raw');
-  const [isHovered, setIsHovered] = useState(false);
-  const [displayedScore, setDisplayedScore] = useState(42);
 
-  const rawCodeSample = `class UserAuthentication:
-    def __init__(self, db_session):
-        self.db = db_session
-
-    def login(self, username, password):
-        user = self.db.query(username)
-        if user and user.verify_password(password):
-            return {"status": "success", "token": "jwt_token_xyz"}
-        return {"status": "error", "message": "Invalid credentials"}`;
-
-  const apiDocSample = `class UserAuthentication:
-    """
-    Handles system credentials validation and session token generation.
-    
-    Attributes:
-        db (Session): Database connection context session.
-    """
-    def __init__(self, db_session):
-        """Initializes database session context."""
-        self.db = db_session
-
-    def login(self, username, password):
-        """
-        Validates user credentials against the database store.
-        
-        Args:
-            username (str): The login credential username query.
-            password (str): The raw text password to verify.
-            
-        Returns:
-            dict: Status code with JWT session token or error payload.
-        """
-        user = self.db.query(username)
-        if user and user.verify_password(password):
-            return {"status": "success", "token": "jwt_token_xyz"}
-        return {"status": "error", "message": "Invalid credentials"}`;
-
-  const healthMetrics = [
-    { label: 'Comment Density', value: 74, color: 'var(--warning)' },
-    { label: 'Docstring Coverage', value: 85, color: 'var(--success)' },
-    { label: 'Parameter Clarity', value: 90, color: 'var(--success)' },
-    { label: 'Naming Consistency', value: 96, color: 'var(--success)' },
-    { label: 'Overall Quality Score', value: 92, color: 'var(--success)' }
-  ];
-
-  // Auto-cycling tabs
-  useEffect(() => {
-    if (isHovered) return;
-    const tabs = ['raw', 'docs', 'health'];
-    const interval = setInterval(() => {
-      setDemoTab(prev => {
-        const idx = tabs.indexOf(prev);
-        return tabs[(idx + 1) % tabs.length];
-      });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [isHovered]);
-
-  // Score count-up logic
-  useEffect(() => {
-    let start = 0;
-    const end = demoTab === 'raw' ? 42 : 92;
-    const duration = 800;
-    const stepTime = Math.abs(Math.floor(duration / (end || 1)));
-    
-    const timer = setInterval(() => {
-      start += 1;
-      if (start >= end) {
-        setDisplayedScore(end);
-        clearInterval(timer);
-      } else {
-        setDisplayedScore(start);
-      }
-    }, stepTime);
-    
-    return () => clearInterval(timer);
-  }, [demoTab]);
-
-  // Card cursor-following radial glow tracking
-  const handleCardMouseMove = (e) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    card.style.setProperty('--mouse-x', `${x}px`);
-    card.style.setProperty('--mouse-y', `${y}px`);
-  };
-
-  // Scroll reveal observer
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-
-    const targets = document.querySelectorAll('.reveal-on-scroll');
-    targets.forEach(t => observer.observe(t));
-
-    return () => observer.disconnect();
-  }, []);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 24, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 16
-      }
-    }
-  };
-
-  return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="splash-landing-container"
-    >
-      {/* Hero Section */}
-      <section className="splash-hero text-center py-5 px-3">
-        <div className="container" style={{ maxWidth: '1000px' }}>
-          <motion.div variants={itemVariants} className="hero-badge mb-3 d-inline-flex px-3 py-1.5 rounded-pill shadow-sm align-items-center">
-            <span className="pulse-dot"></span>
-            <i className="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>
-            <span><DecryptedText text="AI-Powered Technical Documentation Workspace" delay={400} interval={12} /></span>
-          </motion.div>
-          <motion.h1 variants={itemVariants} className="hero-title fw-bold mb-3 display-4">
-            Automate Your Codebase <span className="text-primary-gradient">Documentation & Health</span>
-          </motion.h1>
-          <motion.p variants={itemVariants} className="hero-subtitle mx-auto text-secondary mb-4 lead" style={{ maxWidth: '750px' }}>
-            Dokari analyzes raw source code to compute instant documentation quality ratings, recommend precise AI docstring fixes, generate comprehensive API specs and READMEs, and render architectural visual diagrams.
-          </motion.p>
-          
-          <motion.div variants={itemVariants} className="hero-cta-group d-flex justify-content-center gap-3 mb-5">
-            <motion.button 
-              whileTap={{ scale: 0.96 }}
-              onClick={onRegisterClick} 
-              className="btn btn-primary btn-lg px-4 py-2.5 fw-bold shadow-lg btn-primary-glow"
-            >
-              Get Started Free <i className="fa-solid fa-arrow-right ms-2"></i>
-            </motion.button>
-            <motion.button 
-              whileTap={{ scale: 0.96 }}
-              onClick={onLoginClick} 
-              className="btn btn-secondary btn-lg px-4 py-2.5 fw-semibold"
-            >
-              Sign In to Workspace
-            </motion.button>
-          </motion.div>
-
-          {/* Interactive Live Demo Transformation Widget */}
-          <motion.div 
-            variants={itemVariants} 
-            className="live-demo-card p-4 rounded-4 bg-card border shadow-lg text-start mx-auto" 
-            style={{ maxWidth: '850px' }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            {/* Floating Circular Doc Health Badge */}
-            <div className="floating-score-badge">
-              <svg width="70" height="70" className="progress-ring-badge">
-                <circle cx="35" cy="35" r="30" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
-                <motion.circle 
-                  cx="35" 
-                  cy="35" 
-                  r="30" 
-                  fill="transparent" 
-                  stroke={demoTab === 'raw' ? 'var(--error)' : 'var(--success)'}
-                  strokeWidth="4"
-                  strokeDasharray="188.4"
-                  animate={{ strokeDashoffset: 188.4 - (188.4 * (demoTab === 'raw' ? 42 : 92)) / 100 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-              </svg>
-              <div className="d-flex flex-column align-items-center justify-content-center" style={{ zIndex: 2 }}>
-                <span className="fw-bold fs-5" style={{ color: demoTab === 'raw' ? 'var(--error)' : 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                  {displayedScore}%
-                </span>
-                <span className="text-muted" style={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', marginTop: '2px' }}>
-                  Doc Health
-                </span>
-              </div>
-            </div>
-
-            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-3 gap-2 live-demo-card-header">
-              <div className="d-flex align-items-center gap-2">
-                <span className="dot bg-danger rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
-                <span className="dot bg-warning rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
-                <span className="dot bg-success rounded-circle d-inline-block" style={{ width: 8, height: 8 }}></span>
-                <span className="ms-2 fw-semibold fs-7 text-muted" style={{ fontFamily: 'var(--font-mono)' }}>auth_service.py — Live Preview</span>
-              </div>
-
-              <div className="demo-tab-switcher d-flex gap-1 p-1 bg-panel rounded-3">
-                <button 
-                  onClick={() => setDemoTab('raw')} 
-                  className={`demo-tab-btn ${demoTab === 'raw' ? 'active' : ''}`}
-                >
-                  <i className="fa-solid fa-code me-2"></i>Raw Code
-                </button>
-                <button 
-                  onClick={() => setDemoTab('docs')} 
-                  className={`demo-tab-btn ${demoTab === 'docs' ? 'active' : ''}`}
-                >
-                  <i className="fa-solid fa-file-lines me-2"></i>AI Spec
-                </button>
-                <button 
-                  onClick={() => setDemoTab('health')} 
-                  className={`demo-tab-btn ${demoTab === 'health' ? 'active' : ''}`}
-                >
-                  <i className="fa-solid fa-heart-pulse me-2"></i>Health Report
-                </button>
-              </div>
-            </div>
-
-            <div style={{ minHeight: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <AnimatePresence mode="wait">
-                {demoTab === 'health' ? (
-                  <motion.div 
-                    key="health"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.22 }}
-                    className="d-flex flex-column gap-3 p-3 bg-panel rounded-3 text-start"
-                  >
-                    <div className="d-flex flex-column gap-2.5">
-                      {healthMetrics.map((m, idx) => (
-                        <div key={idx} className="metric-row">
-                          <div className="d-flex justify-content-between align-items-center mb-1 fs-7" style={{ fontFamily: 'var(--font-mono)' }}>
-                            <span className="fw-semibold text-secondary">{m.label}</span>
-                            <span className="fw-bold" style={{ color: m.color }}>{m.value}%</span>
-                          </div>
-                          <div className="progress-bar-bg rounded-pill" style={{ height: '8px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${m.value}%` }}
-                              transition={{ duration: 0.8, ease: "easeOut" }}
-                              className="progress-bar-fill h-100 rounded-pill"
-                              style={{ backgroundColor: m.color }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.pre 
-                    key={demoTab}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.22 }}
-                    className="demo-code-block"
-                  >
-                    <code>
-                      {demoTab === 'raw' && rawCodeSample}
-                      {demoTab === 'docs' && apiDocSample}
-                    </code>
-                  </motion.pre>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Tech Stack Pills Bar */}
-      <motion.section variants={itemVariants} className="tech-stack-bar py-3 border-top border-bottom bg-panel text-center mb-5">
-        <div className="container d-flex flex-wrap align-items-center justify-content-center gap-4 fs-7 text-muted fw-medium" style={{ fontFamily: 'var(--font-mono)' }}>
-          <span><i className="fa-brands fa-python me-1.5 text-info"></i>Python 3.x</span>
-          <span><i className="fa-brands fa-js me-1.5 text-warning"></i>JavaScript & TypeScript</span>
-          <span><i className="fa-brands fa-php me-1.5 text-primary"></i>PHP 8.x</span>
-          <span><i className="fa-solid fa-robot me-1.5 text-success"></i>Google Gemini 2.5 AI</span>
-        </div>
-      </motion.section>
-
-      {/* Features Grid */}
-      <motion.section variants={itemVariants} id="features" className="splash-features py-4 px-4 container mb-5 reveal-on-scroll">
-        <div className="text-center mb-5">
-          <h2 className="section-title h3 fw-bold mb-2">Everything You Need for Clean Code Docs</h2>
-          <p className="text-muted">Built for modern software developers, powered by Google Gemini.</p>
-        </div>
-
-        <div className="row g-4">
-          <div className="col-md-6 col-lg-3 reveal-on-scroll">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
-              <div className="feature-icon-wrapper mb-3 text-primary fs-3">
-                <i className="fa-solid fa-heart-pulse"></i>
-              </div>
-              <h4 className="h5 fw-bold mb-2">Doc Health Score</h4>
-              <p className="text-secondary small m-0">
-                Automatic 0–100 quality scoring that checks comment densities, parameter explanations, and docstrings.
-              </p>
-            </div>
-          </div>
-
-          <div className="col-md-6 col-lg-3 reveal-on-scroll">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
-              <div className="feature-icon-wrapper mb-3 text-primary fs-3">
-                <i className="fa-solid fa-code"></i>
-              </div>
-              <h4 className="h5 fw-bold mb-2">Interactive Fixes</h4>
-              <p className="text-secondary small m-0">
-                Click "Fix" on any quality suggestion to generate copy-pasteable docstrings and comments instantly.
-              </p>
-            </div>
-          </div>
-
-          <div className="col-md-6 col-lg-3 reveal-on-scroll">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
-              <div className="feature-icon-wrapper mb-3 text-primary fs-3">
-                <i className="fa-solid fa-file-lines"></i>
-              </div>
-              <h4 className="h5 fw-bold mb-2">API & README Builder</h4>
-              <p className="text-secondary small m-0">
-                Parses Python, JavaScript, and PHP files to write tailored markdown documentation and export to PDF.
-              </p>
-            </div>
-          </div>
-
-          <div className="col-md-6 col-lg-3 reveal-on-scroll">
-            <div className="splash-feature-card p-4 rounded-3 h-100 border" onMouseMove={handleCardMouseMove}>
-              <div className="feature-icon-wrapper mb-3 text-primary fs-3">
-                <i className="fa-solid fa-diagram-project"></i>
-              </div>
-              <h4 className="h5 fw-bold mb-2">Architecture Maps</h4>
-              <p className="text-secondary small m-0">
-                Renders component dependencies, classes, and helper relations into clean, visual flowchart PNG diagrams.
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* How It Works */}
-      <motion.section variants={itemVariants} id="workflow" className="splash-workflow py-4 px-4 container mb-5 reveal-on-scroll">
-        <div className="p-5 rounded-3 bg-panel border text-center">
-          <h3 className="fw-bold mb-4">Three Simple Steps to Documentation Mastery</h3>
-          <div className="row g-4 text-start">
-            <div className="col-md-4 reveal-on-scroll">
-              <div className="d-flex align-items-start gap-3">
-                <span className="step-number badge fs-5 px-3 py-2 rounded-circle">1</span>
-                <div>
-                  <h5 className="fw-bold mb-1">Create a Workspace</h5>
-                  <p className="text-secondary small m-0">Register an account and start a private cloud project to keep your files secure.</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4 reveal-on-scroll">
-              <div className="d-flex align-items-start gap-3">
-                <span className="step-number badge fs-5 px-3 py-2 rounded-circle">2</span>
-                <div>
-                  <h5 className="fw-bold mb-1">Upload Code Files</h5>
-                  <p className="text-secondary small m-0">Drag and drop your Python, JS, or PHP files to run instant static code analysis.</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4 reveal-on-scroll">
-              <div className="d-flex align-items-start gap-3">
-                <span className="step-number badge fs-5 px-3 py-2 rounded-circle">3</span>
-                <div>
-                  <h5 className="fw-bold mb-1">Generate & Export</h5>
-                  <p className="text-secondary small m-0">Click AI Generate to create your README or API spec and export directly to PDF.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Footer Section */}
-      <footer className="splash-footer py-5 border-top bg-panel text-center reveal-on-scroll">
-        <div className="container" style={{ maxWidth: '1000px' }}>
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-4">
-            <div className="logo-section d-flex align-items-center">
-              <div className="brand-logo-container me-2">
-                <i className="fa-solid fa-cubes-stacked text-primary"></i>
-              </div>
-              <span className="brand-name"><DecryptedText text="Dokari" hoverTrigger={true} interval={45} /></span>
-            </div>
-            <div className="d-flex gap-4">
-              <a href="#features" className="nav-link-custom fs-7">Features</a>
-              <a href="#workflow" className="nav-link-custom fs-7">How it Works</a>
-              <a href="#privacy" className="nav-link-custom fs-7">Privacy Policy</a>
-              <a href="#github" className="nav-link-custom fs-7"><i className="fa-brands fa-github me-1"></i>GitHub</a>
-            </div>
-            <div className="fs-7 text-muted" style={{ fontFamily: 'var(--font-mono)' }}>
-              &copy; {new Date().getFullYear()} Dokari Workspace. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </motion.div>
-  );
-}
 
 export default function App() {
   // Theme State
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [scrolled, setScrolled] = useState(false);
+
+  // View Router State ('landing' | 'dashboard' | 'auth')
+  const [currentView, setCurrentView] = useState(() => {
+    const saved = localStorage.getItem('user');
+    if (saved && saved !== 'undefined' && saved !== 'null') {
+      return 'dashboard';
+    }
+    if (window.location.hash === '#dashboard') return 'dashboard';
+    if (window.location.hash === '#auth' || window.location.hash === '#login' || window.location.hash === '#signup') return 'auth';
+    return 'landing';
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#dashboard') {
+        setCurrentView('dashboard');
+      } else if (window.location.hash === '#auth' || window.location.hash === '#login' || window.location.hash === '#signup') {
+        setCurrentView('auth');
+      } else if (window.location.hash === '' || window.location.hash === '#home' || window.location.hash === '#features' || window.location.hash === '#pricing') {
+        setCurrentView('landing');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateToView = (view) => {
+    setCurrentView(view);
+    if (view === 'dashboard') {
+      window.location.hash = '#dashboard';
+    } else if (view === 'auth') {
+      window.location.hash = '#auth';
+    } else {
+      if (!window.location.hash || window.location.hash === '#dashboard' || window.location.hash === '#auth') {
+        window.location.hash = '#home';
+      }
+    }
+  };
 
   // Scroll listener for sticky header styling
   useEffect(() => {
@@ -641,10 +269,16 @@ export default function App() {
 
   // Auth States
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('user');
+      if (saved && saved !== 'undefined' && saved !== 'null') {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error parsing user state:", e);
+    }
+    return { username: 'Guest Developer', id: 'demo' };
   });
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsPassword, setSettingsPassword] = useState('');
@@ -692,6 +326,7 @@ export default function App() {
   // New Project Form State
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
+  const [projectTemplate, setProjectTemplate] = useState('empty');
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
 
   // Toast State
@@ -787,24 +422,9 @@ export default function App() {
           filename: f.filename,
           content: f.content || ''
         }));
-        if (mapped.length > 0) {
-          setUploadedFiles(mapped);
-          localStorage.setItem(`dokari_files_${currentProjectId}`, JSON.stringify(mapped));
-          fetchDocHealth(mapped);
-        } else {
-          const cached = localStorage.getItem(`dokari_files_${currentProjectId}`);
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              setUploadedFiles(parsed);
-              fetchDocHealth(parsed);
-            } catch (e) {
-              setUploadedFiles([]);
-            }
-          } else {
-            setUploadedFiles([]);
-          }
-        }
+        setUploadedFiles(mapped);
+        localStorage.setItem(`dokari_files_${currentProjectId}`, JSON.stringify(mapped));
+        fetchDocHealth(mapped);
       })
       .catch(err => {
         console.error(err);
@@ -870,12 +490,12 @@ export default function App() {
   }, [activeTab, documents.architecture, theme]);
 
   // Utility to show toasts
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = 'info', action = null, duration = 3500) => {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type, action, duration }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3500);
+    }, duration);
   };
 
   // Toggle Theme handler
@@ -883,11 +503,10 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Trigger Auth modal opening with a message
   const triggerAuthPrompt = (message = 'Authentication required to use this feature.') => {
     showToast(message, 'warning');
     setAuthMode('login');
-    setShowAuthModal(true);
+    navigateToView('auth');
   };
 
   // Handle Authentication (Login / Signup)
@@ -921,9 +540,9 @@ export default function App() {
         } else {
           showToast(`Welcome back, ${data.username}!`, 'success');
           const userData = { id: data.id, username: data.username };
-          setUser(userData);
+           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
-          setShowAuthModal(false);
+          navigateToView('dashboard');
           setAuthUsername('');
           setAuthPassword('');
         }
@@ -936,9 +555,10 @@ export default function App() {
   };
 
   const confirmLogout = () => {
-    setUser(null);
+    setUser({ username: 'Guest Developer', id: 'demo' });
     setCurrentProjectId('demo');
     localStorage.removeItem('user');
+    navigateToView('landing');
     setShowLogoutModal(false);
     showToast('Logged out successfully', 'info');
   };
@@ -995,9 +615,11 @@ export default function App() {
       });
   };
 
-  // Load Projects from Database
   const loadProjects = () => {
-    if (!user) return;
+    if (!user || user.id === 'demo') {
+      setBackendOnline(true);
+      return;
+    }
     fetch(`${BACKEND_URL}/api/projects`, {
       headers: { 'Authorization': String(user.id) }
     })
@@ -1230,6 +852,9 @@ export default function App() {
       showToast('Cannot delete files in demo mode', 'warning');
       return;
     }
+    const fileToDelete = uploadedFiles.find(f => f.filename === filename);
+    if (!fileToDelete) return;
+
     const updated = uploadedFiles.filter(f => f.filename !== filename);
     setUploadedFiles(updated);
     if (currentProjectId) {
@@ -1238,7 +863,69 @@ export default function App() {
     if (selectedFileInspector && selectedFileInspector.filename === filename) {
       setSelectedFileInspector(null);
     }
-    showToast(`Deleted "${filename}" from project workspace`, 'info');
+    
+    // Sync deletion to database backend
+    if (user && user.id !== 'demo') {
+      fetch(`${BACKEND_URL}/api/projects/${currentProjectId}/files?filename=${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': String(user.id) }
+      })
+        .then(async res => {
+          const text = await res.text();
+          console.log('DELETE response status:', res.status, 'body:', text);
+          try {
+            return JSON.parse(text);
+          } catch(e) {
+            return { error: 'Invalid JSON response', body: text };
+          }
+        })
+        .then(data => {
+          console.log('Backend delete synced successfully:', data);
+        })
+        .catch(err => {
+          console.warn('Backend delete sync warning:', err);
+        });
+    }
+
+    showToast(
+      `Deleted "${filename}"`,
+      'info',
+      () => {
+        setUploadedFiles(prev => {
+          if (prev.some(f => f.filename === fileToDelete.filename)) return prev;
+          const restored = [...prev, fileToDelete];
+          if (currentProjectId) {
+            localStorage.setItem(`dokari_files_${currentProjectId}`, JSON.stringify(restored));
+          }
+          fetchDocHealth(restored);
+
+          // Sync restoration back to database backend
+          if (user && user.id !== 'demo') {
+            const formData = new FormData();
+            formData.append('project_id', String(currentProjectId));
+            const blob = new Blob([fileToDelete.content], { type: 'text/plain' });
+            formData.append('files[]', blob, fileToDelete.filename);
+
+            fetch(`${BACKEND_URL}/api/upload.php`, {
+              method: 'POST',
+              headers: { 'Authorization': String(user.id) },
+              body: formData
+            })
+              .then(res => res.json())
+              .then(data => {
+                console.log('Backend sync restore success:', data);
+              })
+              .catch(err => {
+                console.warn('Backend sync restore warning:', err);
+              });
+          }
+
+          return restored;
+        });
+      },
+      5000
+    );
+
     fetchDocHealth(updated);
   };
 
@@ -1523,1040 +1210,136 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Toast notifications */}
-      <div className="toast-wrapper">
-        {toasts.map(t => (
-          <div key={t.id} className={`toast-item toast-${t.type}`}>
-            {t.message}
-          </div>
-        ))}
-      </div>
-
-      {/* Header */}
-      <header className={`main-header d-flex justify-content-between align-items-center px-4 py-3 ${scrolled ? 'scrolled' : ''}`}>
-        <div className="logo-section d-flex align-items-center">
-          <div className="brand-logo-container me-2">
-            <i className="fa-solid fa-cubes-stacked text-primary"></i>
-          </div>
-          <span className="brand-name"><DecryptedText text="Dokari" hoverTrigger={true} interval={45} /></span>
-          <span className="badge bg-secondary ms-2 text-uppercase">v1.0</span>
-        </div>
-
-        <div className="user-controls-section d-flex align-items-center gap-3">
-          {user ? (
-            <>
-              <div className={`connection-status d-flex align-items-center gap-1.5 ${backendOnline ? 'online' : 'offline'}`}>
-                <span className="status-dot"></span>
-                <span className="status-text">{backendOnline ? 'API Connected' : 'API Offline'}</span>
-              </div>
-
-              <button 
-                onClick={() => setShowSettingsModal(true)} 
-                className="user-profile-btn"
-                title="Profile Settings"
-              >
-                <div className="user-avatar">
-                  <i className="fa-solid fa-user"></i>
-                </div>
-                <span className="user-name text-light">{settingsDisplayName || user.username}</span>
-              </button>
-
-              <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
-                <motion.div
-                  key={theme}
-                  initial={{ rotate: -180, scale: 0.6, opacity: 0 }}
-                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                >
-                  <i className={theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun'}></i>
-                </motion.div>
-              </button>
-
-              <button onClick={() => setShowLogoutModal(true)} className="btn-logout" title="Logout">
-                <i className="fa-solid fa-right-from-bracket"></i>
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }} 
-                className="btn btn-secondary px-3 py-1.5 fw-semibold"
-              >
-                Sign In
-              </button>
-
-              <button 
-                onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }} 
-                className="btn btn-primary px-3 py-1.5 fw-semibold"
-              >
-                Register
-              </button>
-
-              <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
-                <motion.div
-                  key={theme}
-                  initial={{ rotate: -180, scale: 0.6, opacity: 0 }}
-                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                >
-                  <i className={theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun'}></i>
-                </motion.div>
-              </button>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* Main Workspace */}
-      {user ? (
-        <div className="main-layout d-flex">
-          {/* Sidebar */}
-          <aside className="sidebar-section px-3 py-4 d-flex flex-column gap-3 overflow-auto">
-            {/* Projects Card */}
-            <div className="project-control-card">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="sidebar-title m-0">Projects</h5>
-                <button 
-                  onClick={handleCreateProjectBtnClick} 
-                  className="btn-new-project" 
-                  title="Create Project"
-                >
-                  <i className="fa-solid fa-plus"></i>
-                </button>
-              </div>
-
-              <div className="project-selector-wrapper">
-                <select 
-                  className="project-select form-select"
-                  value={currentProjectId || ''} 
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCurrentProjectId(val ? Number(val) : null);
-                  }}
-                >
-                  <option value="">-- Choose Project --</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Project Details Card */}
-            <AnimatePresence>
-              {currentProject && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.25 }}
-                  className="project-details-card d-flex flex-column gap-3"
-                >
-                  <div>
-                    <div className="d-flex justify-content-between align-items-start mb-1">
-                      <h6 className="project-detail-name m-0 text-truncate">{currentProject.name}</h6>
-                      <button onClick={deleteCurrentProject} className="btn-delete-project" title="Delete Project">
-                        <i className="fa-solid fa-trash-can"></i>
-                      </button>
-                    </div>
-                    <p className="project-detail-desc text-muted m-0">{currentProject.description}</p>
-                  </div>
-                  
-                  <div className="project-stats text-muted">
-                    <div className="d-flex justify-content-between py-1 border-bottom">
-                      <span>Files uploaded:</span>
-                      <span className="fw-bold">{uploadedFiles.length}</span>
-                    </div>
-                    <div className="d-flex justify-content-between py-1">
-                      <span>Generated docs:</span>
-                      <span className="fw-bold">
-                        {((documents.api ? 1 : 0) + (documents.readme ? 1 : 0) + (documents.architecture ? 1 : 0))}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Doc Health Score Card */}
-            <AnimatePresence>
-              {currentProject && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.25 }}
-                  className="project-details-card d-flex flex-column gap-3"
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="position-relative d-inline-flex">
-                      <svg className="health-ring-svg" width="60" height="60">
-                        <circle className="health-ring-bg" cx="30" cy="30" r="26" />
-                        <circle 
-                          className="health-ring-indicator" 
-                          cx="30" 
-                          cy="30" 
-                          r="26" 
-                          stroke={
-                            docHealthScore >= 80 ? 'var(--success)' : 
-                            docHealthScore >= 50 ? 'var(--warning)' : 
-                            'var(--error)'
-                          }
-                          strokeDasharray="163.3"
-                          strokeDashoffset={163.3 - (163.3 * docHealthScore) / 100}
-                        />
-                      </svg>
-                      <div className="position-absolute top-50 start-50 translate-middle fw-bold fs-7" style={{ transform: 'translate(-50%, -50%)', letterSpacing: '-0.02em' }}>
-                        {healthLoading ? (
-                          <span className="spinner-border spinner-border-sm text-primary" style={{ width: '12px', height: '12px', borderWidth: '2px' }} role="status"></span>
-                        ) : (
-                          `${docHealthScore}%`
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h6 className="sidebar-title m-0">Documentation Health</h6>
-                      <span className="fs-7 text-muted fw-semibold">
-                        {docHealthScore >= 80 ? 'Excellent Coverage' : 
-                         docHealthScore >= 50 ? 'Needs Attention' : 
-                         'Critical Deficit'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="doc-suggestions-feed">
-                    {docHealthSuggestions.length === 0 ? (
-                      <p className="fs-7 text-muted m-0">No suggestions available.</p>
-                    ) : (
-                      docHealthSuggestions.map((suggestion, idx) => (
-                        <div key={idx} className="doc-suggestion-item border-bottom py-2.5 d-flex justify-content-between align-items-start gap-2">
-                          <span className="fs-7 text-secondary lh-sm">{suggestion}</span>
-                          {uploadedFiles.length > 0 && user && (
-                            <button 
-                              onClick={() => generateDocFix(suggestion)} 
-                              className="btn-fix-issue" 
-                              title="Generate Fix"
-                            >
-                              Fix
-                            </button>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </aside>
-
-          {/* Main Content Area */}
-          <main className="content-container flex-grow-1 p-4">
-            <AnimatePresence mode="wait">
-              {!currentProjectId ? (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.25 }}
-                  className="empty-state-card text-center d-flex flex-column align-items-center justify-content-center py-5"
-                >
-                  <div className="empty-icon-container mb-3">
-                    <i className="fa-solid fa-folder-open text-muted"></i>
-                  </div>
-                  <h4>No Active Project Selected</h4>
-                  <p className="text-muted max-w-sm mb-4">
-                    Please select an existing project from the sidebar dropdown or create a new project to start uploading source files and generating technical documentation.
-                  </p>
-                  <button onClick={handleCreateProjectBtnClick} className="btn btn-primary">
-                    <i className="fa-solid fa-plus me-2"></i>Create Project
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="dashboard"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.3 }}
-                  className="row g-4 h-100 align-items-stretch w-100 m-0"
-                >
-              {/* Left Column: File Manager */}
-              <div className="col-12 col-xl-4 d-flex flex-column">
-                <div className="dashboard-card flex-grow-1 d-flex flex-column p-4 animate-delay-1">
-                  <h5 className="card-section-title mb-3">
-                    <i className="fa-solid fa-file-code me-2 text-primary"></i>Source Code Files
-                  </h5>
-
-                  {/* Drag and Drop Box */}
-                  <div 
-                    className={`dropzone-area text-center py-4 px-3 mb-3 d-flex flex-column align-items-center justify-content-center ${dragOver ? 'dragover' : ''}`}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                    onClick={() => {
-                      if (!user) {
-                        triggerAuthPrompt('Please sign in to upload files.');
-                      } else if (currentProjectId === 'demo') {
-                        showToast('Files cannot be uploaded to the demo project. Please create a new project first!', 'warning');
-                      } else {
-                        fileInputRef.current.click();
-                      }
-                    }}
-                  >
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={(e) => handleFiles(e.target.files)} 
-                      multiple 
-                      className="d-none" 
-                    />
-                    <div className="dropzone-icon mb-2">
-                      <i className="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <span className="dropzone-text fw-semibold text-muted">
-                      {uploading ? 'Reading files...' : 'Drag & Drop files or click to browse'}
-                    </span>
-                    <span className="dropzone-subtext text-muted mt-1">.py, .js, .jsx, .ts, .tsx, .php</span>
-                  </div>
-
-                  {/* File Search Input */}
-                  {uploadedFiles.length > 0 && (
-                    <div className="input-group input-group-sm mb-3">
-                      <span className="input-group-text bg-panel border-end-0 text-muted">
-                        <i className="fa-solid fa-magnifying-glass fs-7"></i>
-                      </span>
-                      <input 
-                        type="text" 
-                        className="form-control form-control-sm bg-panel border-start-0 ps-0 fs-7" 
-                        placeholder="Search workspace files..."
-                        value={fileSearchQuery}
-                        onChange={(e) => setFileSearchQuery(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  {/* File List */}
-                  <div className="file-list-wrapper flex-grow-1 overflow-auto" style={{ maxHeight: '320px' }}>
-                    {uploadedFiles.length === 0 ? (
-                      <div className="no-files-placeholder text-center text-muted py-5">
-                        <i className="fa-solid fa-inbox d-block fs-3 mb-2"></i>
-                        <span>No files uploaded yet</span>
-                      </div>
-                    ) : (
-                      <div className="file-items-container">
-                        <AnimatePresence initial={false}>
-                          {uploadedFiles
-                            .filter(f => f.filename.toLowerCase().includes(fileSearchQuery.toLowerCase()))
-                            .map((file) => {
-                              const ext = file.filename.split('.').pop();
-                              let iconClass = 'fa-file-lines';
-                              if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) iconClass = 'fa-js text-warning';
-                              if (ext === 'py') iconClass = 'fa-python text-info';
-                              if (ext === 'php') iconClass = 'fa-php text-primary';
-
-                              return (
-                                <motion.div 
-                                  key={file.filename}
-                                  initial={{ opacity: 0, x: -12 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: 12 }}
-                                  layout
-                                  onClick={() => setSelectedFileInspector(file)}
-                                  className="file-item-row d-flex align-items-center justify-content-between py-2 px-3 mb-2 border rounded"
-                                  title="Click to inspect source code"
-                                >
-                                  <div className="d-flex align-items-center text-truncate me-2">
-                                    <i className={`fa-solid ${iconClass} me-2.5`}></i>
-                                    <span className="file-item-name text-truncate fw-medium fs-7">{file.filename}</span>
-                                  </div>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <span className="file-item-size text-muted fs-7">{Math.round((file.content ? file.content.length : 0) / 1024 * 10) / 10} KB</span>
-                                    <button 
-                                      type="button" 
-                                      onClick={() => setSelectedFileInspector(file)} 
-                                      className="btn btn-sm btn-outline-primary p-1 px-2 border-0"
-                                      title="Inspect Source Code"
-                                    >
-                                      <i className="fa-solid fa-eye fs-7"></i>
-                                    </button>
-                                    <button 
-                                      type="button" 
-                                      onClick={(e) => { e.stopPropagation(); deleteFile(file.filename); }} 
-                                      className="btn btn-sm btn-outline-danger p-1 px-2 border-0"
-                                      title="Delete File"
-                                    >
-                                      <i className="fa-solid fa-trash fs-7"></i>
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                        </AnimatePresence>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: AI Generator & Workspace Displays */}
-              <div className="col-12 col-xl-8 d-flex flex-column">
-                <div className="dashboard-card flex-grow-1 d-flex flex-column p-4 animate-delay-2">
-                  {/* Tabs & Actions */}
-                  <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 border-bottom pb-3 mb-3">
-                    <div className="custom-tabs-container d-flex gap-2">
-                      <button 
-                        onClick={() => setActiveTab('api')} 
-                        className={`tab-btn ${activeTab === 'api' ? 'active' : ''}`}
-                      >
-                        <i className="fa-solid fa-code me-2"></i>API Docs
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('readme')} 
-                        className={`tab-btn ${activeTab === 'readme' ? 'active' : ''}`}
-                      >
-                        <i className="fa-solid fa-book-open me-2"></i>README.md
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab('architecture')} 
-                        className={`tab-btn ${activeTab === 'architecture' ? 'active' : ''}`}
-                      >
-                        <i className="fa-solid fa-diagram-project me-2"></i>Architecture
-                      </button>
-                    </div>
-
-                    <div className="tab-actions d-flex gap-2">
-                      <button 
-                        onClick={generateDocumentation} 
-                        className="btn btn-primary"
-                        disabled={generating || uploadedFiles.length === 0}
-                      >
-                        {generating ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <i className="fa-solid fa-wand-magic-sparkles me-2"></i>AI Generate
-                          </>
-                        )}
-                      </button>
-
-                      {activeTab !== 'architecture' && documents[activeTab] && (
-                        <>
-                          <button onClick={copyToClipboard} className="btn btn-secondary" title="Copy Markdown">
-                            <i className="fa-solid fa-copy"></i>
-                          </button>
-                          <button onClick={() => exportDoc('markdown')} className="btn btn-secondary" title="Export Markdown">
-                            <i className="fa-solid fa-file-arrow-down"></i>
-                          </button>
-                          <button onClick={() => exportDoc('pdf')} className="btn btn-secondary" title="Export PDF">
-                            <i className="fa-solid fa-file-pdf"></i>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Main Document Output Area */}
-                  <div className="document-output-wrapper flex-grow-1">
-                    <AnimatePresence mode="wait">
-                      {activeTab === 'architecture' ? (
-                        /* Diagram Panel */
-                        <motion.div
-                          key="architecture"
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -12 }}
-                          transition={{ duration: 0.22 }}
-                          className="diagram-display-panel h-100 d-flex flex-column align-items-center justify-content-center border rounded p-3 bg-light-panel overflow-auto"
-                        >
-                          {documents.architecture ? (
-                            documents.architecture.startsWith('IMAGE_URL:') ? (
-                              <div className="diagram-image-container text-center">
-                                <img src={documents.architecture.substring(10)} alt="Architecture Diagram" className="img-fluid rounded border shadow-sm" style={{ maxHeight: '420px', objectFit: 'contain' }} />
-                                <div className="mt-3">
-                                  <a href={documents.architecture.substring(10)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary">
-                                    <i className="fa-solid fa-up-right-from-square me-2"></i>Open in New Tab
-                                  </a>
-                                </div>
-                              </div>
-                            ) : (
-                              <div id="mermaid-container" className="w-100 h-100 d-flex align-items-center justify-content-center"></div>
-                            )
-                          ) : (
-                            <div className="no-docs-placeholder text-center text-muted py-5">
-                              <i className="fa-solid fa-network-wired d-block fs-3 mb-2"></i>
-                              <span>No diagram generated yet. Click "AI Generate" to render structure.</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      ) : (
-                        /* Document Markdown Panel */
-                        <motion.div
-                          key={activeTab}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -12 }}
-                          transition={{ duration: 0.22 }}
-                          className="markdown-render-panel h-100 border rounded p-4 overflow-auto bg-light-panel"
-                        >
-                          {documents[activeTab] ? (
-                            <div 
-                              className="markdown-body" 
-                              dangerouslySetInnerHTML={{ __html: marked.parse(documents[activeTab]) }} 
-                            />
-                          ) : (
-                            <div className="no-docs-placeholder text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center h-100">
-                              <i className="fa-solid fa-pen-nib d-block fs-3 mb-2"></i>
-                              <span>No documentation generated yet.</span>
-                              <span className="text-muted fs-7 mt-1">Upload code files and click "AI Generate" to begin.</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-      </div>
-      ) : (
-        <SplashLandingPage 
-          onLoginClick={() => { setAuthMode('login'); setShowAuthModal(true); }} 
-          onRegisterClick={() => { setAuthMode('signup'); setShowAuthModal(true); }} 
+      <ToastStack toasts={toasts} />
+      {currentView !== 'auth' && (
+        <AppHeader
+          user={user}
+          backendOnline={backendOnline}
+          settingsDisplayName={settingsDisplayName}
+          currentProjectId={currentProjectId}
+          projects={projects}
+          theme={theme}
+          scrolled={scrolled}
+          toggleTheme={toggleTheme}
+          handleCreateProjectBtnClick={handleCreateProjectBtnClick}
+          setCurrentProjectId={setCurrentProjectId}
+          setShowSettingsModal={setShowSettingsModal}
+          setShowLogoutModal={setShowLogoutModal}
+          setAuthMode={setAuthMode}
+          currentView={currentView}
+          navigateToView={navigateToView}
         />
       )}
 
-      {/* Auth Modal overlay */}
-      <AnimatePresence>
-        {showAuthModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="modal-card auth-card"
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-              <div className="auth-logo">
-                <i className="fa-solid fa-cubes-stacked me-2"></i>
-                <span>Dokari</span>
-              </div>
-              <button onClick={() => setShowAuthModal(false)} className="btn-modal-close" title="Close">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-            
-            <p className="auth-subtitle text-muted text-center mb-3">
-              {authMode === 'login' ? 'Log in to your account' : 'Register a new account'}
-            </p>
-
-            <form onSubmit={handleAuth} className="auth-form mt-2">
-              <div className="form-group mb-3">
-                <label htmlFor="username">Username</label>
-                <div className="input-group-custom">
-                  <i className="fa-solid fa-user"></i>
-                  <input
-                    type="text"
-                    id="username"
-                    value={authUsername}
-                    onChange={(e) => setAuthUsername(e.target.value)}
-                    placeholder="Enter username"
-                    autoComplete="off"
-                    disabled={authLoading}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group mb-4">
-                <label htmlFor="password">Password</label>
-                <div className="input-group-custom">
-                  <i className="fa-solid fa-lock"></i>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="Enter password"
-                    disabled={authLoading}
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="btn-toggle-password"
-                    title={showPassword ? "Hide Password" : "Show Password"}
-                  >
-                    <i className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" className="btn btn-primary w-100 py-2.5 auth-submit-btn" disabled={authLoading}>
-                {authLoading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Processing...
-                  </>
-                ) : (
-                  authMode === 'login' ? 'Login' : 'Create Account'
-                )}
-              </button>
-            </form>
-
-            <div className="auth-footer text-center mt-4 border-top pt-3">
-              {authMode === 'login' ? (
-                <p className="m-0 fs-7">
-                  Don't have an account?{' '}
-                  <span onClick={() => { setAuthMode('signup'); }} className="auth-toggle-link">
-                    Sign Up
-                  </span>
-                </p>
-              ) : (
-                <p className="m-0 fs-7">
-                  Already have an account?{' '}
-                  <span onClick={() => { setAuthMode('login'); }} className="auth-toggle-link">
-                    Log In
-                  </span>
-                </p>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
+      {currentView === 'dashboard' && (
+        <WorkspaceDashboard
+          currentProjectId={currentProjectId}
+          currentProject={currentProject}
+          uploadedFiles={uploadedFiles}
+          documents={documents}
+          activeTab={activeTab}
+          generating={generating}
+          fileSearchQuery={fileSearchQuery}
+          setFileSearchQuery={setFileSearchQuery}
+          dragOver={dragOver}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          user={user || { username: 'Guest Developer', id: 'demo' }}
+          fileInputRef={fileInputRef}
+          uploading={uploading}
+          showToast={showToast}
+          handleFiles={handleFiles}
+          deleteFile={deleteFile}
+          generateDocumentation={generateDocumentation}
+          copyToClipboard={copyToClipboard}
+          exportDoc={exportDoc}
+          generateDocFix={generateDocFix}
+          deleteCurrentProject={deleteCurrentProject}
+          handleCreateProjectBtnClick={handleCreateProjectBtnClick}
+          docHealthScore={docHealthScore}
+          docHealthSuggestions={docHealthSuggestions}
+          healthLoading={healthLoading}
+          setActiveTab={setActiveTab}
+          setSelectedFileInspector={setSelectedFileInspector}
+          projects={projects}
+          setCurrentProjectId={setCurrentProjectId}
+          triggerAuthPrompt={triggerAuthPrompt}
+        />
       )}
-    </AnimatePresence>
 
-      {/* Logout Confirmation Modal */}
-      <AnimatePresence>
-        {showLogoutModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="modal-card" 
-              style={{ maxWidth: '420px', width: '90%' }}
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <div className="d-flex align-items-center text-warning fs-5 fw-bold">
-                  <i className="fa-solid fa-right-from-bracket me-2"></i>
-                  <span>Confirm Sign Out</span>
-                </div>
-                <button onClick={() => setShowLogoutModal(false)} className="btn-modal-close" title="Close">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-              
-              <p className="text-muted mb-4 fs-6">
-                Are you sure you want to log out of your account? Your projects and uploaded source files will remain securely stored in your account.
-              </p>
+      {currentView === 'landing' && (
+        <SplashLandingPage
+          onLoginClick={() => { setAuthMode('login'); navigateToView('auth'); }}
+          onRegisterClick={() => { setAuthMode('signup'); navigateToView('auth'); }}
+          onGetStarted={() => navigateToView('dashboard')}
+        />
+      )}
 
-              <div className="d-flex gap-2 justify-content-end">
-                <button 
-                  onClick={() => setShowLogoutModal(false)} 
-                  className="btn btn-secondary px-4 py-2 fw-semibold"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={confirmLogout} 
-                  className="btn btn-danger px-4 py-2 fw-semibold d-flex align-items-center gap-2"
-                >
-                  <i className="fa-solid fa-right-from-bracket"></i>
-                  Yes, Log Out
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {currentView === 'auth' && (
+        <AuthPage
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+          authUsername={authUsername}
+          setAuthUsername={setAuthUsername}
+          authPassword={authPassword}
+          setAuthPassword={setAuthPassword}
+          authLoading={authLoading}
+          handleAuth={handleAuth}
+          showToast={showToast}
+          onBackToHome={() => navigateToView('landing')}
+        />
+      )}
 
-      {/* Create Project Modal */}
-      <AnimatePresence>
-        {showNewProjectModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="modal-card"
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <h5 className="modal-title m-0">Create New Project</h5>
-                <button onClick={() => setShowNewProjectModal(false)} className="btn-modal-close" type="button">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-              </div>
+      <AppModals
+        showLogoutModal={showLogoutModal}
+        showNewProjectModal={showNewProjectModal}
+        showSettingsModal={showSettingsModal}
+        showFixModal={showFixModal}
+        selectedFileInspector={selectedFileInspector}
+        settingsDisplayName={settingsDisplayName}
+        settingsModel={settingsModel}
+        settingsPassword={settingsPassword}
+        settingsLoading={settingsLoading}
+        newProjectName={newProjectName}
+        newProjectDesc={newProjectDesc}
+        projectTemplate={projectTemplate}
+        fixingLoading={fixingLoading}
+        docFixProposal={docFixProposal}
+        selectedFixSuggestion={selectedFixSuggestion}
+        currentProject={currentProject}
+        user={user}
+        setShowLogoutModal={setShowLogoutModal}
+        confirmLogout={confirmLogout}
+        createProject={createProject}
+        setSettingsDisplayName={setSettingsDisplayName}
+        setSettingsModel={setSettingsModel}
+        setSettingsPassword={setSettingsPassword}
+        setShowSettingsModal={setShowSettingsModal}
+        handleUpdateProfile={handleUpdateProfile}
+        setNewProjectName={setNewProjectName}
+        setNewProjectDesc={setNewProjectDesc}
+        setProjectTemplate={setProjectTemplate}
+        setShowNewProjectModal={setShowNewProjectModal}
+        copyDocFix={copyDocFix}
+        deleteFile={deleteFile}
+        setSelectedFileInspector={setSelectedFileInspector}
+        setShowFixModal={setShowFixModal}
+        showToast={showToast}
+      />
 
-              <form onSubmit={createProject}>
-                <div className="form-group mb-3">
-                  <label htmlFor="projectName" className="form-label-custom">Project Name</label>
-                  <input 
-                    type="text" 
-                    id="projectName" 
-                    className="form-control-custom"
-                    value={newProjectName} 
-                    onChange={(e) => setNewProjectName(e.target.value)} 
-                    placeholder="e.g. Dokari Web App"
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div className="form-group mb-4">
-                  <label htmlFor="projectDesc" className="form-label-custom">Description (Optional)</label>
-                  <textarea 
-                    id="projectDesc" 
-                    className="form-control-custom"
-                    value={newProjectDesc} 
-                    onChange={(e) => setNewProjectDesc(e.target.value)} 
-                    placeholder="What is this project about?"
-                    rows="3"
-                  />
-                </div>
-
-                <div className="modal-actions-custom d-flex justify-content-end gap-2">
-                  <button type="button" onClick={() => setShowNewProjectModal(false)} className="btn btn-secondary">
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Create Project
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Profile & Settings Modal */}
-      <AnimatePresence>
-        {showSettingsModal && (
-          <div className="modal-backdrop-custom d-flex align-items-center justify-content-center">
-            <motion.div 
-              initial={{ scale: 0.93, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.93, opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="modal-card text-start"
-              style={{ maxWidth: '440px', width: '95%' }}
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <h5 className="modal-title fw-bold m-0"><i className="fa-solid fa-user-gear text-primary me-2"></i>Workspace Settings</h5>
-                <button onClick={() => { setShowSettingsModal(false); setSettingsPassword(''); }} className="btn-modal-close" type="button" title="Close">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdateProfile} className="d-flex flex-column gap-3">
-                <div className="form-group">
-                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Username (Read-only)</label>
-                  <input 
-                    type="text" 
-                    className="form-control-custom bg-panel border text-muted" 
-                    value={user?.username || ''} 
-                    disabled 
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Display Name</label>
-                  <input 
-                    type="text" 
-                    className="form-control-custom bg-panel border" 
-                    placeholder="Enter full display name..."
-                    value={settingsDisplayName}
-                    onChange={(e) => setSettingsDisplayName(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Gemini Model Preference</label>
-                  <select 
-                    className="form-control-custom w-100 p-2 rounded cursor-pointer"
-                    style={{ fontSize: '0.875rem' }}
-                    value={settingsModel}
-                    onChange={(e) => setSettingsModel(e.target.value)}
-                  >
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast, Recommended)</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Advanced Logic)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label-custom fs-7 fw-bold text-secondary text-uppercase mb-1.5" style={{ letterSpacing: '0.03em' }}>Update Password</label>
-                  <input 
-                    type="password" 
-                    className="form-control-custom bg-panel border" 
-                    placeholder="Enter new password (optional)..."
-                    value={settingsPassword}
-                    onChange={(e) => setSettingsPassword(e.target.value)}
-                  />
-                </div>
-
-                <div className="modal-actions-custom d-flex justify-content-end gap-2 mt-2">
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowSettingsModal(false); setSettingsPassword(''); }} 
-                    className="btn btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary btn-primary-glow"
-                    disabled={settingsLoading}
-                  >
-                    {settingsLoading ? 'Saving...' : 'Save Settings'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Code Documentation Fix Recommendation Modal */}
-      <AnimatePresence>
-        {showFixModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="modal-card" 
-              style={{ maxWidth: '600px', width: '100%' }}
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <h5 className="modal-title m-0">Suggested Documentation Fix</h5>
-                <button onClick={() => setShowFixModal(false)} className="btn-modal-close" type="button">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-
-              <div className="modal-body-content">
-                <p className="fs-7 text-muted mb-2">Recommendation:</p>
-                <div className="p-2.5 bg-light rounded border mb-3">
-                  <span className="fs-7 fw-semibold text-secondary">{selectedFixSuggestion}</span>
-                </div>
-
-                <p className="fs-7 text-muted mb-2">AI-Generated Code/Comment Fix Proposal:</p>
-                <div className="position-relative">
-                  {fixingLoading ? (
-                    <div className="border rounded p-4 text-center bg-light-panel">
-                      <span className="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
-                      <span className="fs-7 text-muted">Generating documentation fix...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '250px' }}>
-                        <code>{docFixProposal || 'No fix proposal generated.'}</code>
-                      </pre>
-                      {docFixProposal && (
-                        <button 
-                          onClick={copyDocFix} 
-                          className="btn btn-secondary btn-sm position-absolute" 
-                          style={{ top: '10px', right: '10px', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                        >
-                          Copy
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="modal-actions-custom d-flex justify-content-end gap-2 mt-4 border-top pt-3">
-                <button type="button" onClick={() => setShowFixModal(false)} className="btn btn-secondary">
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* File Inspector Modal */}
-      <AnimatePresence>
-        {selectedFileInspector && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="modal-card" 
-              style={{ maxWidth: '750px', width: '100%' }}
-            >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <h5 className="modal-title m-0 d-flex align-items-center gap-2">
-                  <i className="fa-solid fa-code text-primary"></i>
-                  <span>File Inspector — {selectedFileInspector.filename}</span>
-                </h5>
-                <button onClick={() => setSelectedFileInspector(null)} className="btn-modal-close" type="button">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-
-              <div className="modal-body-content">
-                <div className="d-flex gap-3 mb-3 fs-7 text-muted border-bottom pb-2">
-                  <div><strong>Size:</strong> {Math.round((selectedFileInspector.content ? selectedFileInspector.content.length : 0) / 1024 * 10) / 10} KB</div>
-                  <div><strong>Lines:</strong> {selectedFileInspector.content ? selectedFileInspector.content.split('\n').length : 0}</div>
-                  <div><strong>Extension:</strong> .{selectedFileInspector.filename.split('.').pop()}</div>
-                </div>
-
-                <pre className="border rounded p-3 overflow-auto bg-dark text-white fs-7" style={{ maxHeight: '350px', fontFamily: 'monospace' }}>
-                  <code>{selectedFileInspector.content}</code>
-                </pre>
-              </div>
-
-              <div className="modal-actions-custom d-flex justify-content-between align-items-center mt-4 border-top pt-3">
-                <button 
-                  type="button" 
-                  onClick={() => deleteFile(selectedFileInspector.filename)} 
-                  className="btn btn-danger d-flex align-items-center gap-2 px-3 py-1.5 fs-7"
-                >
-                  <i className="fa-solid fa-trash"></i>
-                  Delete File
-                </button>
-                <button type="button" onClick={() => setSelectedFileInspector(null)} className="btn btn-secondary px-3 py-1.5 fs-7">
-                  Close Inspector
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Action Button (AI Chatbot) */}
-      <button 
-        type="button" 
-        onClick={() => setShowChatWidget(!showChatWidget)} 
-        className={`floating-chat-btn ${showChatWidget ? 'active' : ''}`}
-        title="Chat with AI Companion"
-      >
-        <motion.div
-          key={showChatWidget ? 'close' : 'sparkle'}
-          initial={{ rotate: -90, scale: 0.8 }}
-          animate={{ rotate: 0, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          {showChatWidget ? (
-            <i className="fa-solid fa-xmark"></i>
-          ) : (
-            <div className="position-relative d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-              <i className="fa-solid fa-comments fs-4"></i>
-              <i className="fa-solid fa-sparkles text-warning position-absolute" style={{ fontSize: '0.65rem', top: '-4px', right: '-4px', textShadow: '0 0 6px var(--warning)' }}></i>
-            </div>
-          )}
-        </motion.div>
-      </button>
-
-      {/* Floating AI Chat Widget Drawer */}
-      <AnimatePresence>
-        {showChatWidget && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 260 }}
-            className="floating-chat-widget"
-          >
-            <div className="chat-widget-header d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2 text-white">
-                <div className="position-relative d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
-                  <i className="fa-solid fa-comment-dots fs-5 text-white"></i>
-                  <i className="fa-solid fa-sparkles text-warning position-absolute" style={{ fontSize: '0.5rem', top: '-3px', right: '-3px' }}></i>
-                </div>
-                <div>
-                  <h6 className="m-0 text-white">AI Companion</h6>
-                  <span className="text-white-50">Ask about your code</span>
-                </div>
-              </div>
-              <button onClick={() => setShowChatWidget(false)} className="btn-close-chat" title="Close chat">
-                <i className="fa-solid fa-minus"></i>
-              </button>
-            </div>
-
-            <div className="chat-widget-body">
-              <div className="chat-widget-messages">
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className={`chat-message-row d-flex ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
-                    <div className={`chat-message-bubble ${msg.sender === 'user' ? 'bubble-user' : 'bubble-ai'}`}>
-                      <div className="bubble-sender-name mb-1">
-                        {msg.sender === 'user' ? 'You' : 'Dokari AI'}
-                      </div>
-                      <div className="bubble-text">{msg.text}</div>
-                    </div>
-                  </div>
-                ))}
-                {chatLoading && (
-                  <div className="chat-message-row d-flex justify-content-start">
-                    <div className="chat-message-bubble bubble-ai">
-                      <div className="bubble-sender-name mb-1">Dokari AI</div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="spinner-border spinner-border-sm text-primary" style={{ width: '10px', height: '10px' }} role="status"></span>
-                        <span className="fs-7 text-muted">Thinking...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              <div className="chat-widget-input-area">
-                <form onSubmit={sendChatMessage}>
-                  <input 
-                    type="text" 
-                    value={chatInput} 
-                    onChange={(e) => setChatInput(e.target.value)} 
-                    placeholder={uploadedFiles.length === 0 ? "Upload code to chat..." : "Ask me anything..."}
-                    disabled={chatLoading || uploadedFiles.length === 0}
-                  />
-                  <button type="submit" className="btn-chat-send" disabled={chatLoading || !chatInput.trim() || uploadedFiles.length === 0}>
-                    <i className="fa-solid fa-paper-plane"></i>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ChatWidget
+        showChatWidget={showChatWidget}
+        setShowChatWidget={setShowChatWidget}
+        chatMessages={chatMessages}
+        chatLoading={chatLoading}
+        chatInput={chatInput}
+        setChatInput={setChatInput}
+        sendChatMessage={sendChatMessage}
+        chatEndRef={chatEndRef}
+        uploadedFiles={uploadedFiles}
+      />
     </div>
   );
 }
+
