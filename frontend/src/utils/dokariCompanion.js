@@ -56,7 +56,7 @@ export const findLocalAnswer = (question) => {
   }
 
   // 2. Handle thank you / compliments
-  const compliments = ["thank you", "thanks", "awesome", "great", "cool", "perfect", "good job"];
+  const compliments = ["thank you", "thanks", "awesome", "great", "cool", "perfect", "good job", "nice", "wow"];
   if (compliments.some(c => query.includes(c))) {
     return "You're very welcome! Please let me know if you have any other questions about how Dokari works or if you need assistance generating documentation.";
   }
