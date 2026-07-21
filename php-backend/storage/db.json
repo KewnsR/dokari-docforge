@@ -2,7 +2,7 @@
     "users": [
         {
             "id": 1,
-            "username": "testuser650",
+            "username": "testuser123",
             "password": "$2y$12$3t1jQbGVVEfXdZT9q5C.RewvYuSy.Y0r2JJZgm\/hUEtz43f6LLHGu",
             "created_at": "2026-06-27 15:43:41"
         },
@@ -12,30 +12,6 @@
             "password": "$2y$12$XtM6RtcnyTmUKNi18YaDZuxEoC1p6At9gVJm2e575OPzEB8bDBhPW",
             "created_at": "2026-06-27 15:54:56",
             "tier": "premium"
-        },
-        {
-            "id": 3,
-            "username": "testuser_del_4858",
-            "password": "$2y$12$c0d\/B0ubYvtq4g7bZwyJl.oqvAtjrEGPFWecestZUFKizMkrrSTNi",
-            "tier": "free",
-            "usage_count": 0,
-            "created_at": "2026-07-15 17:42:49"
-        },
-        {
-            "id": 4,
-            "username": "testuser_del_9014",
-            "password": "$2y$12$Whbuz2l3CfBJbkyRkwcUR.uaNJufriDBmk4hp3yZ\/I\/LLGL2Fjyr6",
-            "tier": "free",
-            "usage_count": 0,
-            "created_at": "2026-07-15 17:43:28"
-        },
-        {
-            "id": 5,
-            "username": "testuser_del_5920",
-            "password": "$2y$12$J4urTWnSudl3YyuSg0USb.FyZ6NDeO4XTi1YVRW7b2gV8yxVsXQmi",
-            "tier": "free",
-            "usage_count": 0,
-            "created_at": "2026-07-15 17:44:00"
         }
     ],
     "projects": [
@@ -45,34 +21,6 @@
             "description": "aaaaa\n",
             "user_id": 2,
             "created_at": "2026-06-27 15:55:13"
-        },
-        {
-            "id": 2,
-            "name": "Test Project",
-            "description": "For testing upload",
-            "user_id": 1,
-            "created_at": "2026-06-27 16:23:21"
-        },
-        {
-            "id": 3,
-            "name": "Delete Sync Test",
-            "description": "Integration test for delete sync",
-            "user_id": 3,
-            "created_at": "2026-07-15 17:42:49"
-        },
-        {
-            "id": 4,
-            "name": "Delete Sync Test",
-            "description": "Integration test for delete sync",
-            "user_id": 4,
-            "created_at": "2026-07-15 17:43:28"
-        },
-        {
-            "id": 5,
-            "name": "Delete Sync Test",
-            "description": "Integration test for delete sync",
-            "user_id": 5,
-            "created_at": "2026-07-15 17:44:00"
         }
     ],
     "files": [
