@@ -38,8 +38,8 @@
 }
 
 .splash-hero {
-  padding-top: 6rem !important;
-  padding-bottom: 6rem !important;
+  padding-top: 4.5rem !important;
+  padding-bottom: 4.5rem !important;
   position: relative;
   z-index: 2;
 }
@@ -84,7 +84,7 @@
 .hero-title {
   color: var(--text-primary);
   letter-spacing: -0.04em;
-  font-size: 3.5rem;
+  font-size: 3rem;
   line-height: 1.15;
 }
 
