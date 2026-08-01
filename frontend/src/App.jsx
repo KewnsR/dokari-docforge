@@ -218,7 +218,7 @@ export default function App() {
 
   // View Router State ('landing' | 'dashboard' | 'auth')
   const [currentView, setCurrentView] = useState(() => {
-    const saved = localStorage.getItem('user');
+    const saved = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (saved && saved !== 'undefined' && saved !== 'null') {
       return 'dashboard';
     }
@@ -270,7 +270,7 @@ export default function App() {
   // Auth States
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('user');
+      const saved = localStorage.getItem('user') || sessionStorage.getItem('user');
       if (saved && saved !== 'undefined' && saved !== 'null') {
         return JSON.parse(saved);
       }
@@ -286,7 +286,8 @@ export default function App() {
   const [settingsDisplayName, setSettingsDisplayName] = useState(() => localStorage.getItem('displayName') || '');
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
-  const [authUsername, setAuthUsername] = useState('');
+  const [authUsername, setAuthUsername] = useState(() => localStorage.getItem('remembered_username') || '');
+  const [keepMeSignedIn, setKeepMeSignedIn] = useState(true);
   const [authPassword, setAuthPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -540,10 +541,16 @@ export default function App() {
         } else {
           showToast(`Welcome back, ${data.username}!`, 'success');
           const userData = { id: data.id, username: data.username };
-           setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+          if (keepMeSignedIn) {
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('remembered_username', data.username);
+          } else {
+            sessionStorage.setItem('user', JSON.stringify(userData));
+            localStorage.removeItem('remembered_username');
+          }
           navigateToView('dashboard');
-          setAuthUsername('');
+          setAuthUsername(keepMeSignedIn ? data.username : '');
           setAuthPassword('');
         }
       })
@@ -558,6 +565,7 @@ export default function App() {
     setUser({ username: 'Guest Developer', id: 'demo' });
     setCurrentProjectId('demo');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     navigateToView('landing');
     setShowLogoutModal(false);
     showToast('Logged out successfully', 'info');
@@ -1288,6 +1296,8 @@ export default function App() {
           handleAuth={handleAuth}
           showToast={showToast}
           onBackToHome={() => navigateToView('landing')}
+          keepMeSignedIn={keepMeSignedIn}
+          setKeepMeSignedIn={setKeepMeSignedIn}
         />
       )}
 

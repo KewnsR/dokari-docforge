@@ -12,7 +12,9 @@ function AuthPage({
   authLoading,
   handleAuth,
   showToast,
-  onBackToHome
+  onBackToHome,
+  keepMeSignedIn,
+  setKeepMeSignedIn
 }) {
   const [retryPassword, setRetryPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -122,7 +124,7 @@ function AuthPage({
                   value={authUsername}
                   onChange={(e) => setAuthUsername(e.target.value)}
                   placeholder="Enter username"
-                  autoComplete="off"
+                  autoComplete="username"
                   disabled={authLoading}
                   required
                 />
@@ -151,6 +153,7 @@ function AuthPage({
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
                   placeholder="Enter password"
+                  autoComplete={authMode === 'login' ? "current-password" : "new-password"}
                   disabled={authLoading}
                   required
                 />
@@ -212,6 +215,25 @@ function AuthPage({
                 </div>
               )}
             </div>
+
+            {authMode === 'login' && (
+              <div className="form-group mb-3.5 d-flex align-items-center justify-content-between">
+                <div className="form-check d-flex align-items-center gap-2 p-0 m-0">
+                  <input
+                    type="checkbox"
+                    id="keepMeSignedIn"
+                    className="form-check-input-custom"
+                    checked={keepMeSignedIn}
+                    onChange={(e) => setKeepMeSignedIn(e.target.checked)}
+                    disabled={authLoading}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <label htmlFor="keepMeSignedIn" className="form-check-label-custom select-none" style={{ cursor: 'pointer', margin: 0 }}>
+                    Keep me signed in
+                  </label>
+                </div>
+              </div>
+            )}
 
             {authMode === 'signup' && (
               <div className="form-group mb-3">
