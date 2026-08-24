@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import DecryptedText from './DecryptedText';
 
@@ -19,6 +19,30 @@ function AppHeader({
   currentView,
   navigateToView,
 }) {
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const handleSettingsClick = () => {
+    setProfileMenuOpen(false);
+    setShowSettingsModal(true);
+  };
+
+  const handleLogoutClick = () => {
+    setProfileMenuOpen(false);
+    setShowLogoutModal(true);
+  };
+
   return (
     // Header
       <header className={`main-header d-flex justify-content-between align-items-center px-4 py-3 ${scrolled ? 'scrolled' : ''}`}>
@@ -52,16 +76,39 @@ function AppHeader({
                 <span className="status-text">{backendOnline ? 'API Connected' : 'API Offline'}</span>
               </div>
 
-              <button 
-                onClick={() => setShowSettingsModal(true)} 
-                className="user-profile-btn"
-                title="Profile Settings"
-              >
-                <div className="user-avatar">
-                  <i className="fa-solid fa-user"></i>
-                </div>
-                <span className="user-name">{settingsDisplayName || user.username}</span>
-              </button>
+              <div className="profile-menu-wrapper" ref={profileMenuRef}>
+                <button
+                  onClick={() => setProfileMenuOpen((isOpen) => !isOpen)}
+                  className={`user-profile-btn ${profileMenuOpen ? 'is-open' : ''}`}
+                  title="Open account menu"
+                  aria-expanded={profileMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <div className="user-avatar">
+                    <i className="fa-solid fa-user"></i>
+                  </div>
+                  <span className="user-name">{settingsDisplayName || user.username}</span>
+                  <i className="fa-solid fa-chevron-down profile-menu-chevron"></i>
+                </button>
+
+                {profileMenuOpen && (
+                  <div className="profile-dropdown" role="menu">
+                    <div className="profile-dropdown-account">
+                      <strong>{settingsDisplayName || user.username}</strong>
+                      <span>{user.email || `${user.username}@gmail.com`}</span>
+                    </div>
+                    <div className="profile-dropdown-divider"></div>
+                    <button onClick={handleSettingsClick} className="profile-dropdown-item" role="menuitem">
+                      <i className="fa-solid fa-gear"></i>
+                      <span>Settings</span>
+                    </button>
+                    <button onClick={handleLogoutClick} className="profile-dropdown-item profile-dropdown-item-danger" role="menuitem">
+                      <i className="fa-solid fa-right-from-bracket"></i>
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle theme">
                 <motion.div
@@ -74,9 +121,6 @@ function AppHeader({
                 </motion.div>
               </button>
 
-              <button onClick={() => setShowLogoutModal(true)} className="btn-logout" title="Logout">
-                <i className="fa-solid fa-right-from-bracket"></i>
-              </button>
             </>
           ) : (
             <>

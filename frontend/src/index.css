@@ -21,8 +21,8 @@ html {
   --border-color: #cbd5e1;
   --border-focus: #4f46e5;
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #475569;
+  --text-secondary: #1f2937;
+  --text-muted: #374151;
   
   --primary: #4f46e5;
   --primary-hover: #4338ca;
@@ -46,23 +46,23 @@ html {
 
 /* Dark Theme Variables */
 .dark-mode {
-  --bg-color: #090d16;
-  --bg-sidebar: #0f172a;
-  --card-bg: #1e293b;
-  --panel-bg: #0f172a;
-  --border-color: #334155;
+  --bg-color: #090909;
+  --bg-sidebar: #101010;
+  --card-bg: #181818;
+  --panel-bg: #111111;
+  --border-color: #2d2d2d;
   --border-focus: #6c7cff;
   --text-primary: #ffffff;
   --text-secondary: #f3f4f6;
   --text-muted: #d1d5db;
   
   --primary: #6c7cff;
-  --primary-hover: #5565e6;
-  --primary-light: #181d30;
+  --primary-hover: #3a3a3a;
+  --primary-light: #202020;
   
-  --secondary: #475569;
-  --secondary-hover: #334155;
-  --secondary-light: #1e293b;
+  --secondary: #4a4a4a;
+  --secondary-hover: #606060;
+  --secondary-light: #1c1c1c;
   
   --success: #34d399;
   --success-light: #064e3b;
@@ -291,7 +291,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .header-nav-links .nav-link:hover {
-  color: var(--primary);
+  color: var(--text-primary);
 }
 
 /* Grow Utility */
@@ -385,6 +385,126 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(0.97);
 }
 
+.profile-menu-wrapper {
+  position: relative;
+}
+
+.user-profile-btn.is-open,
+.user-profile-btn:hover {
+  opacity: 1;
+  transform: none;
+}
+
+.profile-menu-chevron {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.user-profile-btn.is-open .profile-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -8px;
+  width: 224px;
+  padding: 8px;
+  background: #111111;
+  border: 1px solid #2d2d2d;
+  border-radius: 4px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+  animation: profileDropdownIn 0.16s ease-out both;
+}
+
+@keyframes profileDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-dropdown-account {
+  padding: 10px 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-dropdown-account strong {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.profile-dropdown-account span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  margin: 0 -8px 6px;
+  background: #292929;
+}
+
+.profile-dropdown-item {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-dropdown-item i {
+  width: 16px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.profile-dropdown-item:hover {
+  background: #1d1d1d;
+  color: var(--text-primary);
+}
+
+.profile-dropdown-item-danger:hover,
+.profile-dropdown-item-danger:hover i {
+  color: var(--error);
+}
+
+.light-mode .profile-dropdown {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.light-mode .profile-dropdown-divider {
+  background: var(--border-color);
+}
+
+.light-mode .profile-dropdown-item:hover {
+  background: var(--panel-bg);
+}
+
 .user-name {
   font-size: 0.875rem;
   font-weight: 600;
@@ -471,8 +591,8 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s;
 }
 .btn-new-project:hover {
-  background-color: var(--primary);
-  color: #ffffff;
+  background-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .project-details-card {
@@ -570,8 +690,8 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s;
 }
 .dropzone-area:hover, .dropzone-area.dragover {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
+  border-color: var(--border-color);
+  background-color: var(--card-bg);
 }
 .dropzone-icon {
   font-size: 1.75rem;
@@ -596,7 +716,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s;
 }
 .file-item-row:hover {
-  border-color: var(--primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .file-item-name {
@@ -776,7 +896,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(9, 13, 22, 0.75);
+  background-color: rgba(9, 9, 9, 0.75);
   z-index: 1050;
   padding: 20px;
 }

@@ -106,7 +106,7 @@
 /* Feature cards radial glow effect */
 .splash-feature-card {
   position: relative;
-  background: rgba(30, 41, 59, 0.25) !important;
+  background: rgba(24, 24, 24, 0.7) !important;
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -131,8 +131,8 @@
   opacity: 1;
 }
 .splash-feature-card:hover {
-  border-color: rgba(108, 124, 255, 0.35) !important;
-  box-shadow: 0 16px 36px -12px rgba(108, 124, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.35) !important;
 }
 .splash-feature-card:hover .feature-icon-wrapper i {
   transform: scale(1.15) rotate(6deg);
@@ -163,7 +163,7 @@
 /* Enhanced Live Demo Card & Floating Badge */
 .live-demo-card {
   position: relative;
-  background: rgba(15, 23, 42, 0.4) !important;
+  background: rgba(17, 17, 17, 0.85) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -171,8 +171,8 @@
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .live-demo-card:hover {
-  border-color: rgba(108, 124, 255, 0.25) !important;
-  box-shadow: 0 32px 72px -12px rgba(108, 124, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 32px 72px -12px rgba(0, 0, 0, 0.35) !important;
 }
 
 .live-demo-card-header {
@@ -204,14 +204,14 @@
   background: rgba(255, 255, 255, 0.02);
 }
 .demo-tab-btn.active {
-  background: rgba(108, 124, 255, 0.1) !important;
-  border-color: rgba(108, 124, 255, 0.2) !important;
-  color: #6c7cff !important;
-  box-shadow: 0 2px 8px rgba(108, 124, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .demo-code-block {
-  background: #090d16 !important;
+  background: #090909 !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 10px !important;
   padding: 1.25rem !important;
@@ -229,7 +229,7 @@
   position: absolute;
   top: -20px;
   right: -20px;
-  background: rgba(9, 13, 22, 0.95);
+  background: rgba(9, 9, 9, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
@@ -284,7 +284,7 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-primary-glow:hover {
-  box-shadow: 0 8px 24px rgba(108, 124, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 .btn:active, .btn-primary-glow:active {
   transform: scale(0.96) translateY(0);
@@ -319,7 +319,7 @@
   border-bottom: 1px solid transparent;
 }
 .main-header.scrolled {
-  background-color: rgba(9, 13, 22, 0.8) !important;
+  background-color: rgba(9, 9, 9, 0.8) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom-color: rgba(255, 255, 255, 0.08) !important;
@@ -343,7 +343,7 @@
 }
 
 .tech-stack-bar {
-  background-color: rgba(30, 41, 59, 0.2);
+  background-color: rgba(24, 24, 24, 0.6);
   backdrop-filter: blur(8px);
   border-color: var(--border-color) !important;
 }
@@ -357,9 +357,9 @@
 }
 
 .file-item-row:hover {
-  background-color: var(--primary-light) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 4px 12px -3px rgba(99, 102, 241, 0.15);
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.25);
 }
 
 .btn-file-inspect {
@@ -398,13 +398,13 @@
 
 @keyframes pulseGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.12);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
 }
 
@@ -428,8 +428,8 @@
 }
 
 .dashboard-card:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-md), 0 10px 30px -15px rgba(99, 102, 241, 0.12);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md), 0 10px 30px -15px rgba(0, 0, 0, 0.25);
 }
 
 /* Staggered animation delays for UI blocks */
@@ -451,7 +451,7 @@
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -462,8 +462,8 @@
 }
 
 .dropzone-area:hover, .dropzone-area.dragover {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
+  border-color: var(--border-color);
+  background-color: var(--card-bg);
   animation: pulseGlow 2s infinite;
 }
 
@@ -558,7 +558,7 @@ pre code {
   background: var(--primary);
   color: #ffffff;
   border: none;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -570,7 +570,7 @@ pre code {
 
 .floating-chat-btn:hover {
   transform: scale(1.1) rotate(8deg);
-  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.18);
 }
 
 .floating-chat-btn.active {
@@ -587,7 +587,7 @@ pre code {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.15), 0 8px 16px -8px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.25), 0 8px 16px -8px rgba(0, 0, 0, 0.18);
   z-index: 1000;
   display: flex;
   flex-direction: column;
