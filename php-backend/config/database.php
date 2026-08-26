@@ -95,6 +95,19 @@ class DokariFallbackStatement {
         }
 
         // PROJECTS queries
+        else if (strpos($sql, 'DELETE FROM projects') !== false || (strpos($sql, 'DELETE FROM') !== false && strpos($sql, 'user_id') !== false)) {
+            $projectId = (int)($params[':id'] ?? 0);
+            $db['projects'] = array_values(array_filter($db['projects'], function($p) use ($params) {
+                return !((int)$p['id'] === (int)($params[':id'] ?? 0) && (int)$p['user_id'] === (int)($params[':user_id'] ?? 0));
+            }));
+            $db['files'] = array_values(array_filter($db['files'], function($f) use ($projectId) {
+                return (int)$f['project_id'] !== $projectId;
+            }));
+            $db['documents'] = array_values(array_filter($db['documents'], function($d) use ($projectId) {
+                return (int)$d['project_id'] !== $projectId;
+            }));
+            $this->saveDB($db);
+        }
         else if (strpos($sql, 'FROM projects') !== false || (strpos($sql, 'FROM') !== false && strpos($sql, 'user_id') !== false)) {
             if (strpos($sql, 'WHERE id = :id AND user_id = :user_id') !== false) {
                 foreach ($db['projects'] as $p) {
@@ -124,19 +137,6 @@ class DokariFallbackStatement {
             $db['projects'][] = $newProject;
             $this->saveDB($db);
             $this->data[] = ['id' => $newId];
-        } else if (strpos($sql, 'DELETE FROM projects') !== false || (strpos($sql, 'DELETE FROM') !== false && strpos($sql, 'user_id') !== false)) {
-            $projectId = (int)($params[':id'] ?? 0);
-            $db['projects'] = array_values(array_filter($db['projects'], function($p) use ($params) {
-                return !((int)$p['id'] === (int)($params[':id'] ?? 0) && (int)$p['user_id'] === (int)($params[':user_id'] ?? 0));
-            }));
-            // Cascade delete files and documents for this project
-            $db['files'] = array_values(array_filter($db['files'], function($f) use ($projectId) {
-                return (int)$f['project_id'] !== $projectId;
-            }));
-            $db['documents'] = array_values(array_filter($db['documents'], function($d) use ($projectId) {
-                return (int)$d['project_id'] !== $projectId;
-            }));
-            $this->saveDB($db);
         }
 
         // FILES queries

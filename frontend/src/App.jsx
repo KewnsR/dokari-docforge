@@ -280,6 +280,9 @@ export default function App() {
     return { username: 'Guest Developer', id: 'demo' };
   });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
+  const [showDeleteFileModal, setShowDeleteFileModal] = useState(false);
+  const [pendingDeleteFilename, setPendingDeleteFilename] = useState('');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsPassword, setSettingsPassword] = useState('');
   const [settingsModel, setSettingsModel] = useState(() => localStorage.getItem('apiModel') || 'gemini-2.5-flash');
@@ -298,6 +301,9 @@ export default function App() {
   const [currentProject, setCurrentProject] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [documents, setDocuments] = useState({ api: '', readme: '', architecture: '' });
+  const [architectureZoom, setArchitectureZoom] = useState(1);
+  const [architecturePan, setArchitecturePan] = useState({ x: 0, y: 0 });
+  const architectureDragRef = useRef(null);
   const [diagramUrl, setDiagramUrl] = useState('');
   const [activeTab, setActiveTab] = useState('api');
   const [generating, setGenerating] = useState(false);
@@ -329,6 +335,8 @@ export default function App() {
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [projectTemplate, setProjectTemplate] = useState('empty');
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const creatingProjectRef = useRef(false);
 
   // Toast State
   const [toasts, setToasts] = useState([]);
@@ -466,14 +474,43 @@ export default function App() {
       });
   }, [currentProjectId, user]);
 
+  const normalizeMermaidDiagram = (content) => {
+    const lines = String(content || '').replace(/^```(?:mermaid)?\s*/i, '').replace(/\s*```\s*$/, '').split('\n');
+    const start = lines.findIndex(line => /^\s*(?:graph|flowchart)\s+(?:TB|TD|BT|RL|LR)\b/i.test(line));
+    const diagramLines = start >= 0 ? lines.slice(start) : lines;
+
+    return diagramLines.map(line => {
+      let normalizedLine = line.replace(
+        /^(\s*)([A-Za-z][A-Za-z0-9_]*)\s+--\s*([^-\n]+?)\s*-->\s*([A-Za-z][A-Za-z0-9_]*)\s*(?:\([^()\n]+\))?\s*$/,
+        '$1$2 -->|$3| $4'
+      );
+      normalizedLine = normalizedLine.replace(
+        /^(\s*)([A-Za-z][A-Za-z0-9_]*)\s+-->\s+([A-Za-z][A-Za-z0-9_]*)\s+--\s*(.+?)\s*$/,
+        '$1$2 -->|$4| $3'
+      );
+      normalizedLine = normalizedLine.replace(
+        /^(\s*)([A-Za-z][A-Za-z0-9_]*)\s+(-->|-\.->|==>|---)\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^()\n]+)\)\s*$/,
+        '$1$2 $3|$5| $4'
+      );
+      return normalizedLine;
+    }).join('\n').trim();
+  };
+
   // Mermaid dynamic renderer hook
   useEffect(() => {
     if (activeTab === 'architecture' && documents.architecture && !documents.architecture.startsWith('IMAGE_URL:') && window.mermaid) {
-      try {
+      const renderDiagram = async () => {
         const container = document.getElementById('mermaid-container');
         if (container) {
           container.removeAttribute('data-processed');
-          container.innerHTML = `<pre class="mermaid" style="background: transparent; border: none; margin: 0; padding: 0;">${documents.architecture}</pre>`;
+          const diagram = document.createElement('pre');
+          diagram.className = 'mermaid';
+          diagram.style.background = 'transparent';
+          diagram.style.border = 'none';
+          diagram.style.margin = '0';
+          diagram.style.padding = '0';
+          diagram.textContent = normalizeMermaidDiagram(documents.architecture);
+          container.replaceChildren(diagram);
           window.mermaid.initialize({
             startOnLoad: false,
             theme: theme === 'dark' ? 'dark' : 'default',
@@ -481,14 +518,75 @@ export default function App() {
             flowchart: { useMaxWidth: true, htmlLabels: true }
           });
           window.mermaid.run({
-            nodes: document.querySelectorAll('.mermaid'),
-          });
+            nodes: [diagram],
+          }).then(() => {
+            const svg = container.querySelector('.mermaid svg');
+            if (svg) {
+              const viewBox = svg.getAttribute('viewBox')?.split(/\s+/).map(Number);
+              if (viewBox?.length === 4 && viewBox[2] > 0 && viewBox[3] > 0) {
+                svg.style.width = `${viewBox[2]}px`;
+                svg.style.height = `${viewBox[3]}px`;
+              }
+              svg.style.maxWidth = 'none';
+              svg.style.display = 'block';
+              svg.style.transform = `translate(${architecturePan.x}px, ${architecturePan.y}px) scale(${architectureZoom})`;
+              svg.style.transformOrigin = 'center center';
+            }
+          }).catch(e => console.error('Mermaid error:', e));
         }
-      } catch (e) {
+      };
+
+      renderDiagram().catch(e => {
         console.error("Mermaid error:", e);
-      }
+      });
     }
   }, [activeTab, documents.architecture, theme]);
+
+  useEffect(() => {
+    const svg = document.querySelector('#mermaid-container .mermaid svg');
+    if (svg) {
+      svg.style.transform = `translate(${architecturePan.x}px, ${architecturePan.y}px) scale(${architectureZoom})`;
+      svg.style.transformOrigin = 'center center';
+    }
+  }, [architectureZoom, architecturePan]);
+
+  const updateArchitectureZoom = (amount) => {
+    setArchitectureZoom(current => Math.min(4, Math.max(0.2, current + amount)));
+  };
+
+  const resetArchitectureView = () => {
+    setArchitectureZoom(1);
+    setArchitecturePan({ x: 0, y: 0 });
+  };
+
+  const handleArchitectureWheel = (event) => {
+    event.preventDefault();
+    updateArchitectureZoom(event.deltaY < 0 ? 0.1 : -0.1);
+  };
+
+  const handleArchitecturePointerDown = (event) => {
+    if (event.button !== 0) return;
+    architectureDragRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      panX: architecturePan.x,
+      panY: architecturePan.y,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleArchitecturePointerMove = (event) => {
+    const drag = architectureDragRef.current;
+    if (!drag) return;
+    setArchitecturePan({
+      x: drag.panX + event.clientX - drag.startX,
+      y: drag.panY + event.clientY - drag.startY,
+    });
+  };
+
+  const stopArchitecturePointer = () => {
+    architectureDragRef.current = null;
+  };
 
   // Utility to show toasts
   const showToast = (message, type = 'info', action = null, duration = 3500) => {
@@ -655,6 +753,7 @@ export default function App() {
   // Create Project
   const createProject = (e) => {
     e.preventDefault();
+    if (creatingProjectRef.current) return;
     if (!user) {
       triggerAuthPrompt('Please sign in or register to create custom projects.');
       return;
@@ -665,6 +764,8 @@ export default function App() {
       return;
     }
 
+    creatingProjectRef.current = true;
+    setCreatingProject(true);
     fetch(`${BACKEND_URL}/api/projects`, {
       method: 'POST',
       headers: { 
@@ -690,6 +791,10 @@ export default function App() {
       .catch(err => {
         console.error(err);
         showToast(err.message || 'Failed to create project', 'error');
+      })
+      .finally(() => {
+        creatingProjectRef.current = false;
+        setCreatingProject(false);
       });
   };
 
@@ -705,10 +810,11 @@ export default function App() {
     }
 
     if (!currentProjectId || !currentProject) return;
+    setShowDeleteProjectModal(true);
+  };
 
-    if (!confirm(`Are you sure you want to delete project "${currentProject.name}"? This will permanently delete all uploaded files and generated documents.`)) {
-      return;
-    }
+  const confirmDeleteProject = () => {
+    setShowDeleteProjectModal(false);
 
     fetch(`${BACKEND_URL}/api/projects/${currentProjectId}`, {
       method: 'DELETE',
@@ -720,6 +826,7 @@ export default function App() {
       })
       .then(() => {
         showToast(`Project "${currentProject.name}" deleted successfully.`, 'success');
+        setProjects(previousProjects => previousProjects.filter(project => String(project.id) !== String(currentProjectId)));
         setCurrentProjectId(null);
         loadProjects();
       })
@@ -862,6 +969,16 @@ export default function App() {
     }
     const fileToDelete = uploadedFiles.find(f => f.filename === filename);
     if (!fileToDelete) return;
+    setPendingDeleteFilename(filename);
+    setShowDeleteFileModal(true);
+  };
+
+  const confirmDeleteFile = () => {
+    const filename = pendingDeleteFilename;
+    setShowDeleteFileModal(false);
+    setPendingDeleteFilename('');
+    const fileToDelete = uploadedFiles.find(f => f.filename === filename);
+    if (!fileToDelete) return;
 
     const updated = uploadedFiles.filter(f => f.filename !== filename);
     setUploadedFiles(updated);
@@ -960,96 +1077,49 @@ export default function App() {
       content: f.content
     }));
 
-    if (activeTab === 'api') {
-      fetch(`${AI_SERVICE_URL}/generate/api`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: currentProjectId, files_content: filesContentArray })
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Generation failed');
-          return res.json();
-        })
-        .then(data => {
-          const mdContent = data.documentation;
-          setDocuments(prev => ({ ...prev, api: mdContent }));
-          return saveDocToDB('api', mdContent);
-        })
-        .catch(err => {
-          console.error(err);
-          showToast('Failed to generate API docs.', 'error');
-          setGenerating(false);
-        });
-    } else if (activeTab === 'readme') {
-      fetch(`${AI_SERVICE_URL}/generate/readme`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          project_info: { name: currentProject.name, description: currentProject.description },
-          files_content: filesContentArray
-        })
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Generation failed');
-          return res.json();
-        })
-        .then(data => {
-          const mdContent = data.readme;
-          setDocuments(prev => ({ ...prev, readme: mdContent }));
-          return saveDocToDB('readme', mdContent);
-        })
-        .catch(err => {
-          console.error(err);
-          showToast('Failed to generate README.', 'error');
-          setGenerating(false);
-        });
-    } else if (activeTab === 'architecture') {
-      const code_structure = {
-        project_name: currentProject.name,
-        files: uploadedFiles.map(f => ({
-          filename: f.filename,
-          content: f.content
-        }))
-      };
+    const codeStructure = {
+      project_name: currentProject.name,
+      files: uploadedFiles.map(f => ({ filename: f.filename, content: f.content }))
+    };
+    const request = (url, body) => fetch(`${AI_SERVICE_URL}${url}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(res => {
+      if (!res.ok) throw new Error(`Generation failed: ${url}`);
+      return res.json();
+    });
 
-      fetch(`${AI_SERVICE_URL}/generate/diagram`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code_structure })
+    Promise.all([
+      request('/generate/api', { project_id: currentProjectId, files_content: filesContentArray }),
+      request('/generate/readme', {
+        project_info: { name: currentProject.name, description: currentProject.description },
+        files_content: filesContentArray
+      }),
+      request('/generate/diagram', { code_structure: codeStructure })
+    ])
+      .then(([apiData, readmeData, diagramData]) => {
+        const architecture = diagramData.mermaid_code || (diagramData.diagram_url
+          ? `IMAGE_URL:${diagramData.diagram_url.replace('localhost', HOST_IP)}`
+          : 'graph TD\n    ErrorNode["No valid diagram data returned from AI service"]');
+        const generatedDocuments = {
+          api: apiData.documentation,
+          readme: readmeData.readme,
+          architecture
+        };
+        setDocuments(prev => ({ ...prev, ...generatedDocuments }));
+        return Promise.all(Object.entries(generatedDocuments).map(([type, content]) => saveDocToDB(type, content, false)));
       })
-        .then(res => {
-          if (!res.ok) throw new Error('Diagram generation failed');
-          return res.json();
-        })
-        .then(data => {
-          let finalCode = "";
-          if (data.mermaid_code) {
-            finalCode = data.mermaid_code;
-          } else if (data.diagram_url) {
-            const mappedUrl = data.diagram_url.replace('localhost', HOST_IP);
-            finalCode = `IMAGE_URL:${mappedUrl}`;
-          } else {
-            finalCode = `graph TD\n    ErrorNode[No valid diagram data returned from AI service]`;
-          }
-
-          setDocuments(prev => ({
-            ...prev,
-            architecture: finalCode
-          }));
-          showToast('Architecture Diagram generated successfully!', 'success');
-          setGenerating(false);
-          return saveDocToDB('architecture', finalCode);
-        })
-        .catch(err => {
-          console.error(err);
-          showToast('Failed to generate Architecture Diagram.', 'error');
-          setGenerating(false);
-        });
-    }
+      .then(() => showToast('API docs, README, and architecture generated successfully!', 'success'))
+      .catch(err => {
+        console.error(err);
+        showToast('Failed to generate all documentation.', 'error');
+      })
+      .finally(() => setGenerating(false));
   };
 
   // Save generated document to database
-  const saveDocToDB = (type, content) => {
+  const saveDocToDB = (type, content, showSavedToast = true) => {
     if (!user) return;
     return fetch(`${BACKEND_URL}/api/projects/${currentProjectId}/documents`, {
       method: 'POST',
@@ -1064,7 +1134,7 @@ export default function App() {
         return res.json();
       })
       .then(() => {
-        showToast('Documentation saved to project database!', 'success');
+        if (showSavedToast) showToast('Documentation saved to project database!', 'success');
         setGenerating(false);
       });
   };
@@ -1273,6 +1343,13 @@ export default function App() {
           projects={projects}
           setCurrentProjectId={setCurrentProjectId}
           triggerAuthPrompt={triggerAuthPrompt}
+          architectureZoom={architectureZoom}
+          updateArchitectureZoom={updateArchitectureZoom}
+          resetArchitectureView={resetArchitectureView}
+          handleArchitectureWheel={handleArchitectureWheel}
+          handleArchitecturePointerDown={handleArchitecturePointerDown}
+          handleArchitecturePointerMove={handleArchitecturePointerMove}
+          stopArchitecturePointer={stopArchitecturePointer}
         />
       )}
 
@@ -1303,6 +1380,9 @@ export default function App() {
 
       <AppModals
         showLogoutModal={showLogoutModal}
+        showDeleteProjectModal={showDeleteProjectModal}
+        showDeleteFileModal={showDeleteFileModal}
+        pendingDeleteFilename={pendingDeleteFilename}
         showNewProjectModal={showNewProjectModal}
         showSettingsModal={showSettingsModal}
         showFixModal={showFixModal}
@@ -1314,13 +1394,18 @@ export default function App() {
         newProjectName={newProjectName}
         newProjectDesc={newProjectDesc}
         projectTemplate={projectTemplate}
+        creatingProject={creatingProject}
         fixingLoading={fixingLoading}
         docFixProposal={docFixProposal}
         selectedFixSuggestion={selectedFixSuggestion}
         currentProject={currentProject}
         user={user}
         setShowLogoutModal={setShowLogoutModal}
+        setShowDeleteProjectModal={setShowDeleteProjectModal}
+        setShowDeleteFileModal={setShowDeleteFileModal}
         confirmLogout={confirmLogout}
+        confirmDeleteProject={confirmDeleteProject}
+        confirmDeleteFile={confirmDeleteFile}
         createProject={createProject}
         setSettingsDisplayName={setSettingsDisplayName}
         setSettingsModel={setSettingsModel}

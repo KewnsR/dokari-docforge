@@ -31,9 +31,9 @@ export const DEMO_DOCUMENTS = {
     end
     AppNode -->|JSON API| AppPy
     AppNode -->|Auth / Storage| IndexPhp
-    style Frontend fill:#1e293b,stroke:#6366f1,stroke-width:2px,color:#ffffff
-    style AI_Service fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#ffffff
-    style Backend fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#ffffff`
+    style Frontend fill:#181818,stroke:#6366f1,stroke-width:2px,color:#ffffff
+    style AI_Service fill:#181818,stroke:#10b981,stroke-width:2px,color:#ffffff
+    style Backend fill:#181818,stroke:#f59e0b,stroke-width:2px,color:#ffffff`
 };
 
 export const DEMO_HEALTH = {

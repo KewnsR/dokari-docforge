@@ -3,6 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 function AppModals({
   showLogoutModal,
+  showDeleteProjectModal,
+  showDeleteFileModal,
+  pendingDeleteFilename,
   showNewProjectModal,
   showSettingsModal,
   showFixModal,
@@ -14,13 +17,18 @@ function AppModals({
   newProjectName,
   newProjectDesc,
   projectTemplate,
+  creatingProject,
   fixingLoading,
   docFixProposal,
   selectedFixSuggestion,
   currentProject,
   user,
   setShowLogoutModal,
+  setShowDeleteProjectModal,
+  setShowDeleteFileModal,
   confirmLogout,
+  confirmDeleteProject,
+  confirmDeleteFile,
   createProject,
   setSettingsDisplayName,
   setSettingsModel,
@@ -39,6 +47,59 @@ function AppModals({
 }) {
   return (
     <>
+      {/* Delete File Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteFileModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-backdrop-custom d-flex align-items-center justify-content-center">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="modal-card" style={{ maxWidth: '320px', width: '90%' }}>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="modal-title m-0">Delete file?</h5>
+                <button type="button" onClick={() => setShowDeleteFileModal(false)} className="btn-modal-close" title="Close">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <p className="text-muted mb-3 text-truncate" title={pendingDeleteFilename}>{pendingDeleteFilename}</p>
+              <div className="d-flex justify-content-end gap-2">
+                <button type="button" onClick={() => setShowDeleteFileModal(false)} className="btn btn-secondary btn-sm">Cancel</button>
+                <button type="button" onClick={confirmDeleteFile} className="btn btn-danger btn-sm">Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Project Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteProjectModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-backdrop-custom d-flex align-items-center justify-content-center"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="modal-card"
+              style={{ maxWidth: '320px', width: '90%' }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="modal-title m-0">Delete project?</h5>
+                <button type="button" onClick={() => setShowDeleteProjectModal(false)} className="btn-modal-close" title="Close">
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <p className="text-muted mb-3">This cannot be undone.</p>
+              <div className="d-flex justify-content-end gap-2">
+                <button type="button" onClick={() => setShowDeleteProjectModal(false)} className="btn btn-secondary btn-sm">Cancel</button>
+                <button type="button" onClick={confirmDeleteProject} className="btn btn-danger btn-sm">Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Logout Confirmation Modal */}
       <AnimatePresence>
         {showLogoutModal && (
@@ -55,36 +116,19 @@ function AppModals({
               exit={{ scale: 0.95, y: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
               className="modal-card" 
-              style={{ maxWidth: '420px', width: '90%' }}
+              style={{ maxWidth: '320px', width: '90%' }}
             >
-              <div className="modal-header-custom d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                <div className="d-flex align-items-center text-warning fs-5 fw-bold">
-                  <i className="fa-solid fa-right-from-bracket me-2"></i>
-                  <span>Confirm Sign Out</span>
-                </div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="modal-title m-0">Log out?</h5>
                 <button onClick={() => setShowLogoutModal(false)} className="btn-modal-close" title="Close">
                   <i className="fa-solid fa-xmark"></i>
                 </button>
               </div>
-              
-              <p className="text-muted mb-4 fs-6">
-                Are you sure you want to log out of your account? Your projects and uploaded source files will remain securely stored in your account.
-              </p>
+              <p className="text-muted mb-3">You can sign back in anytime.</p>
 
               <div className="d-flex gap-2 justify-content-end">
-                <button 
-                  onClick={() => setShowLogoutModal(false)} 
-                  className="btn btn-secondary px-4 py-2 fw-semibold"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={confirmLogout} 
-                  className="btn btn-danger px-4 py-2 fw-semibold d-flex align-items-center gap-2"
-                >
-                  <i className="fa-solid fa-right-from-bracket"></i>
-                  Yes, Log Out
-                </button>
+                <button onClick={() => setShowLogoutModal(false)} className="btn btn-secondary btn-sm">Cancel</button>
+                <button onClick={confirmLogout} className="btn btn-danger btn-sm">Log out</button>
               </div>
             </motion.div>
           </motion.div>
@@ -145,8 +189,8 @@ function AppModals({
                   <button type="button" onClick={() => setShowNewProjectModal(false)} className="btn btn-secondary">
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    Create Project
+                  <button type="submit" className="btn btn-primary" disabled={creatingProject}>
+                    {creatingProject ? 'Creating...' : 'Create Project'}
                   </button>
                 </div>
               </form>

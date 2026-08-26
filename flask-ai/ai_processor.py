@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import google.generativeai as genai
 from typing import List, Dict
 
@@ -272,11 +273,68 @@ Code files to analyze:
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    @staticmethod
+    def _normalize_mermaid_diagram(content: str) -> str:
+        """Remove common model formatting mistakes before Mermaid parses the diagram."""
+        content = content.replace('\ufeff', '').strip()
+        content = re.sub(r'^```(?:mermaid)?\s*', '', content, count=1, flags=re.IGNORECASE)
+        content = re.sub(r'\s*```\s*$', '', content, count=1)
+
+        lines = content.splitlines()
+        start = next(
+            (index for index, line in enumerate(lines)
+             if re.match(r'^\s*(?:graph|flowchart)\s+(?:TB|TD|BT|RL|LR)\b', line, re.IGNORECASE)),
+            None
+        )
+        if start is not None:
+            lines = lines[start:]
+
+        normalized = []
+        subgraph_index = 0
+        for line in lines:
+            subgraph_match = re.match(r'^(\s*)subgraph\s+(.+?)\s*$', line, re.IGNORECASE)
+            if subgraph_match and '[' not in subgraph_match.group(2):
+                subgraph_index += 1
+                title = subgraph_match.group(2).replace('"', "'")
+                line = f'{subgraph_match.group(1)}subgraph Layer{subgraph_index}["{title}"]'
+
+            line = re.sub(
+                r'^(\s*)([A-Za-z][A-Za-z0-9_]*)\s+-->(?:\s+)([A-Za-z][A-Za-z0-9_]*)\s+--\s*(.+?)\s*$',
+                r'\1\2 -->|\4| \3',
+                line
+            )
+
+            line = re.sub(
+                r'(?P<source>\b[A-Za-z][A-Za-z0-9_]*)\s+--\s*'
+                r'(?P<label>[^-\n]+?)\s*-->\s*'
+                r'(?P<target>[A-Za-z][A-Za-z0-9_]*)\s*'
+                r'(?:\((?P<details>[^()\n]+)\))?\s*$',
+                lambda match: (
+                    f"{match.group('source')} -->|{match.group('label').strip()}| "
+                    f"{match.group('target')}"
+                ),
+                line
+            )
+
+            line = re.sub(
+                r'(?P<source>\b[A-Za-z][A-Za-z0-9_]*)\s+'
+                r'(?P<arrow>-->|-.->|==>|---)\s*'
+                r'(?P<target>[A-Za-z][A-Za-z0-9_]*)\s*\((?P<label>[^()\n]+)\)\s*$',
+                lambda match: (
+                    f"{match.group('source')} {match.group('arrow')}|"
+                    f"{match.group('label').strip()}| {match.group('target')}"
+                ),
+                line
+            )
+            normalized.append(line.rstrip())
+
+        return '\n'.join(normalized).strip()
+
     def generate_architecture_mermaid(self, codebase_structure: dict, requested_model: str = None) -> str:
         """Generates a highly accurate Mermaid.js architecture diagram representing the actual uploaded files"""
         files = codebase_structure.get('files', [])
         if not files:
-            return "graph TD\n    NoFiles[No uploaded files to map]"
+            return 'graph TD\n    NoFiles["No uploaded files to map"]'
             
         prompt = """Analyze the following source code files and generate a professional, accurate, and legit architectural design diagram in Mermaid.js flowchart syntax (e.g. `graph TD` or `graph LR`).
         
@@ -285,7 +343,9 @@ Code files to analyze:
         2. Create nodes for each module/file and draw clean directional dependency/flow arrows (e.g. Controller --> Service) showing how data flows and which components import or use each other.
         3. Do NOT wrap the mermaid code in any markdown fences (like ```mermaid or ```). Return ONLY the raw Mermaid diagram text starting directly with `graph TD` or `graph LR` or other valid Mermaid graph types.
         4. Do not use icons, emojis, or external markdown assets.
-        5. VERY IMPORTANT: Node identifiers in Mermaid must NOT contain periods (.), dashes (-), or special characters (e.g. do not write 'main.py' as a node ID). Instead, use simple alphanumeric node IDs and define labels inside brackets, e.g. 'MainPy[main.py]' or 'utils_js[utils.js]'.
+        5. VERY IMPORTANT: Node identifiers in Mermaid must contain only letters, numbers, and underscores. Put every human-readable node label in double quotes inside brackets, e.g. `MainPy["main.py"]`.
+        6. Use only standard Mermaid flowchart grammar. Edge labels MUST use `Source -->|label| Target`; never append parenthetical text after a node. Keep subgraph declarations in the form `subgraph LayerId["Layer title"]`.
+        7. Do not use parentheses, slashes, brackets, or hyphens outside quoted node labels and edge labels. Do not add explanatory prose or comments.
         
         Files to analyze:
         """
@@ -298,14 +358,7 @@ Code files to analyze:
             
         try:
             response = self._generate_content_with_fallback(prompt, requested_model=requested_model)
-            content = response.text.strip()
-            # Clean up potential markdown fences if Gemini included them anyway
-            if content.startswith("```mermaid"):
-                content = content[10:]
-            elif content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            return content.strip()
+            return self._normalize_mermaid_diagram(response.text)
         except Exception as e:
-            return f"graph TD\n    Error[Error generating architecture diagram: {str(e)}]"
+            error_message = str(e).replace('"', "'").replace('\n', ' ')
+            return f'graph TD\n    Error["Error generating architecture diagram: {error_message}"]'
