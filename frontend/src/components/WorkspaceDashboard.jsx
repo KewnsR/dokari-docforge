@@ -35,6 +35,13 @@ function WorkspaceDashboard({
   projects,
   setCurrentProjectId,
   triggerAuthPrompt,
+  architectureZoom,
+  updateArchitectureZoom,
+  resetArchitectureView,
+  handleArchitectureWheel,
+  handleArchitecturePointerDown,
+  handleArchitecturePointerMove,
+  stopArchitecturePointer,
 }) {
   return (
     // Main Workspace
@@ -368,7 +375,7 @@ function WorkspaceDashboard({
                           </>
                         ) : (
                           <>
-                            <i className="fa-solid fa-wand-magic-sparkles me-2"></i>AI Generate
+                            <i className="fa-solid fa-wand-magic-sparkles me-2"></i>Generate All
                           </>
                         )}
                       </button>
@@ -413,7 +420,30 @@ function WorkspaceDashboard({
                                 </div>
                               </div>
                             ) : (
-                              <div id="mermaid-container" className="w-100 h-100 d-flex align-items-center justify-content-center"></div>
+                              <div
+                                className="architecture-diagram-viewport w-100 h-100"
+                                onWheel={handleArchitectureWheel}
+                                onPointerDown={handleArchitecturePointerDown}
+                                onPointerMove={handleArchitecturePointerMove}
+                                onPointerUp={stopArchitecturePointer}
+                                onPointerCancel={stopArchitecturePointer}
+                                onPointerLeave={stopArchitecturePointer}
+                                style={{ touchAction: 'none', cursor: 'grab' }}
+                              >
+                                <div className="architecture-diagram-controls" role="toolbar" aria-label="Architecture diagram controls" onPointerDown={event => event.stopPropagation()}>
+                                  <button type="button" onClick={() => updateArchitectureZoom(0.1)} title="Zoom in" aria-label="Zoom in">
+                                    <i className="fa-solid fa-plus"></i>
+                                  </button>
+                                  <span aria-live="polite">{Math.round(architectureZoom * 100)}%</span>
+                                  <button type="button" onClick={() => updateArchitectureZoom(-0.1)} title="Zoom out" aria-label="Zoom out">
+                                    <i className="fa-solid fa-minus"></i>
+                                  </button>
+                                  <button type="button" onClick={resetArchitectureView} title="Reset view" aria-label="Reset view">
+                                    <i className="fa-solid fa-rotate-left"></i>
+                                  </button>
+                                </div>
+                                <div id="mermaid-container" className="w-100 h-100 d-flex align-items-center justify-content-center"></div>
+                              </div>
                             )
                           ) : (
                             <div className="no-docs-placeholder text-center text-muted py-5">

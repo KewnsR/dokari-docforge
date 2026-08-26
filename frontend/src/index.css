@@ -766,6 +766,60 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
 }
 
+.architecture-diagram-viewport {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.architecture-diagram-viewport #mermaid-container {
+  overflow: hidden;
+}
+
+.architecture-diagram-viewport #mermaid-container .mermaid svg {
+  max-width: none !important;
+  flex: 0 0 auto;
+  transition: transform 120ms ease-out;
+  user-select: none;
+}
+
+.architecture-diagram-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+}
+
+.architecture-diagram-controls button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.architecture-diagram-controls button:hover,
+.architecture-diagram-controls button:focus-visible {
+  background: var(--primary-light);
+}
+
+.architecture-diagram-controls span {
+  min-width: 48px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
 .diagram-image-container img {
   max-height: 380px;
   object-fit: contain;
@@ -951,6 +1005,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 .form-control-custom:focus {
   border-color: var(--border-focus);
+}
+
+.dark-mode .input-group .form-control.bg-panel,
+.dark-mode .input-group .input-group-text.bg-panel {
+  background-color: var(--panel-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .input-group .form-control.bg-panel::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+.dark-mode .modal-card .bg-light {
+  background-color: var(--panel-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Scrollbars */
