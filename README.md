@@ -17,7 +17,6 @@ Dokari is an intelligent, open-source technical documentation companion that use
 - **Architecture Diagrams**: Evaluates project dependencies/imports to draw visual diagram flowchart blocks.
 - **User Authentication**: Secure login/signup system with project isolation for private cloud storage.
 - **Multi-format Exports**: Download generated documentation as Markdown files or export them directly as PDF documents.
-- **Clean Solid UI**: Slate flat dashboard with light and dark mode toggles, built without glassmorphism.
 
 ---
 
