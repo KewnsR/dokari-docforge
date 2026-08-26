@@ -279,6 +279,7 @@ export default function App() {
     }
     return { username: 'Guest Developer', id: 'demo' };
   });
+  const isGuestUser = !user || user.id === 'demo';
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
   const [showDeleteFileModal, setShowDeleteFileModal] = useState(false);
@@ -722,7 +723,9 @@ export default function App() {
   };
 
   const loadProjects = () => {
-    if (!user || user.id === 'demo') {
+    if (isGuestUser) {
+      setProjects([]);
+      setCurrentProjectId('demo');
       setBackendOnline(true);
       return;
     }
@@ -754,7 +757,7 @@ export default function App() {
   const createProject = (e) => {
     e.preventDefault();
     if (creatingProjectRef.current) return;
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in or register to create custom projects.');
       return;
     }
@@ -804,7 +807,7 @@ export default function App() {
       showToast('The demo project cannot be deleted.', 'warning');
       return;
     }
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in to manage projects.');
       return;
     }
@@ -869,7 +872,7 @@ export default function App() {
 
   // Handle local File Reading & DB Upload
   const handleFiles = (filesList) => {
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in to upload your project files.');
       return;
     }
@@ -963,7 +966,7 @@ export default function App() {
 
   // Delete uploaded file from workspace
   const deleteFile = (filename) => {
-    if (currentProjectId === 'demo') {
+    if (isGuestUser || currentProjectId === 'demo') {
       showToast('Cannot delete files in demo mode', 'warning');
       return;
     }
@@ -1056,7 +1059,7 @@ export default function App() {
 
   // Generate Documentation
   const generateDocumentation = () => {
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in or sign up to run AI generation.');
       return;
     }
@@ -1158,6 +1161,10 @@ export default function App() {
 
   // Generate code docstring fix modal
   const generateDocFix = (suggestion) => {
+    if (isGuestUser) {
+      triggerAuthPrompt('Please sign in to generate documentation fixes.');
+      return;
+    }
     setSelectedFixSuggestion(suggestion);
     setShowFixModal(true);
     setFixingLoading(true);
@@ -1262,7 +1269,7 @@ export default function App() {
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in to upload your project files.');
       return;
     }
@@ -1272,7 +1279,7 @@ export default function App() {
   };
 
   const handleCreateProjectBtnClick = () => {
-    if (!user) {
+    if (isGuestUser) {
       triggerAuthPrompt('Please sign in to create new projects.');
     } else {
       setShowNewProjectModal(true);
